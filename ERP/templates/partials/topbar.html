@@ -1,0 +1,190 @@
+{% block header %}
+<header id="page-topbar">
+    <div class="layout-width">
+        <div class="navbar-header">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <!-- LOGO - Left Side -->
+                <div class="navbar-brand-box horizontal-logo">
+                    <a href="/" class="logo logo-dark">
+                        <span class="logo-sm">
+                            <img src="{{ url_for('static', filename='images/logo-sm.png') }}" alt="" height="22">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="{{ url_for('static', filename='images/logo-dark.png') }}" alt="" height="17">
+                        </span>
+                    </a>
+                    <a href="/" class="logo logo-light">
+                        <span class="logo-sm">
+                            <img src="{{ url_for('static', filename='images/logo-sm.png') }}" alt="" height="22">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="{{ url_for('static', filename='images/logo-light.png') }}" alt="" height="17">
+                        </span>
+                    </a>
+                </div>
+
+                <!-- Profile Section - only for authenticated users -->
+                {% if current_user.is_authenticated %}
+                <div class="dropdown header-item topbar-user ms-auto">
+                    <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="d-flex align-items-center">
+                            <!-- Avatar: custom image or initial from name/username -->
+                            {% if current_user.avatar %}
+                                <img class="rounded-circle header-profile-user"
+                                     src="{{ current_user.avatar }}"
+                                     alt="Header Avatar">
+                            {% else %}
+                                <span class="rounded-circle header-profile-user d-flex align-items-center justify-content-center bg-primary text-white fw-bold"
+                                      style="width:32px; height:32px; font-size:16px;">
+                                    {{ (current_user.name or current_user.username or 'U')|first|upper }}
+                                </span>
+                            {% endif %}
+                            <span class="text-start ms-xl-2">
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
+                                    {{ current_user.name or current_user.username or 'User' }}
+                                </span>
+                                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
+                                    {{ current_user.role|default('Role') }}
+                                </span>
+                            </span>
+                        </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0" style="width: 280px;">
+                        <!-- Profile Card Header -->
+                        <div class="p-3 border-bottom bg-light bg-opacity-25">
+                            <div class="d-flex align-items-center">
+                                {% if current_user.avatar %}
+                                    <img class="rounded-circle avatar-md"
+                                         src="{{ current_user.avatar }}"
+                                         alt="Profile Avatar">
+                                {% else %}
+                                    <span class="rounded-circle avatar-md d-flex align-items-center justify-content-center bg-primary text-white fw-bold"
+                                          style="width:48px; height:48px; font-size:24px;">
+                                        {{ (current_user.name or current_user.username or 'U')|first|upper }}
+                                    </span>
+                                {% endif %}
+                                <div class="ms-3">
+                                    <h5 class="mb-1">{{ current_user.name or current_user.username or 'User' }}</h5>
+                                    <p class="text-muted mb-0">{{ current_user.role|default('Role') }}</p>
+                                    <small class="text-muted">{{ current_user.email|default('email@example.com') }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Details (username and email only) -->
+                        <div class="p-3 border-bottom">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="mdi mdi-account-circle fs-18 text-primary me-2"></i>
+                                <span><strong>Username:</strong> {{ current_user.username|default('username') }}</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="mdi mdi-briefcase fs-18 text-primary me-2"></i>
+                                <span><strong>Role:</strong> {{ current_user.role|default('Role') }}</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="mdi mdi-email fs-18 text-primary me-2"></i>
+                                <span><strong>Email:</strong> {{ current_user.email|default('email@example.com') }}</span>
+                            </div>
+                            <!-- Phone row removed -->
+                        </div>
+
+                        <!-- Dynamic Profit Section -->
+                        
+                        <!-- Action Buttons -->
+                        <div class="p-3">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm w-50" data-bs-dismiss="dropdown">
+                                    <i class="mdi mdi-close me-1"></i> Cancel
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm w-50" data-bs-toggle="modal" data-bs-target="#logoutConfirmationModal">
+                                    <i class="mdi mdi-logout me-1"></i> Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Login link for unauthenticated users -->
+                <div class="ms-auto">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
+                </div>
+                {% endif %}
+
+                <!-- Messages (unchanged) -->
+                {% if messages %}
+                {% for message in messages %}
+                <input type="hidden" id="login-msg" value="{{ message }}">
+                <button type="button" class="btn btn-primary" id="liveToastBtn" hidden></button>
+                <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+                    <div class="toast align-items-right text-white bg-primary border-0" id="toast-message" role="alert"
+                         aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body"></div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                    aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Logout Confirmation Modal (unchanged) -->
+<div class="modal fade" id="logoutConfirmationModal" tabindex="-1" aria-labelledby="logoutConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logoutConfirmationModalLabel">
+                    <i class="mdi mdi-logout text-danger me-2"></i>
+                    Confirm Logout
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-3">
+                    <lord-icon src="https://cdn.lordicon.com/ljvjsnvh.json" trigger="loop" delay="2000"
+                               colors="primary:#f06548,secondary:#f7b84b" style="width:100px;height:100px">
+                    </lord-icon>
+                    <h5 class="mt-3">Ready to leave{% if current_user.is_authenticated %}, {{ current_user.name or current_user.username }}{% endif %}?</h5>
+                    <p class="text-muted mb-0">Are you sure you want to log out?<br>You'll need to login again to access your account.</p>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="mdi mdi-close me-1"></i> Cancel
+                </button>
+                <a href="{{ url_for('account.logout') }}" class="btn btn-danger">
+                    <i class="mdi mdi-logout me-1"></i> Yes, Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- removeNotificationModal (unchanged) -->
+<div id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="NotificationModalbtn-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+                    <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+                        <h4>Are you sure ?</h4>
+                        <p class="text-muted mx-4 mb-0">Are you sure you want to remove this Notification ?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn w-sm btn-danger" id="delete-notification">Yes, Delete It!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock header %}

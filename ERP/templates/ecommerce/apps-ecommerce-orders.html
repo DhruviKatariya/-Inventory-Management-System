@@ -1,0 +1,1597 @@
+{% extends "partials/base.html" %}
+{% block title %}Orders Management{% endblock title %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<!-- Select2 CSS for better dropdowns -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Main Card Styling */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+        margin-bottom: 30px;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header */
+    .card-header-custom {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .card-header-custom h5 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .card-header-custom h5 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+    
+    /* Stats Cards */
+    .stats-wrapper {
+        padding: 1.5rem 2rem 0.5rem 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #eef2f6;
+        cursor: pointer;
+    }
+    
+    .stat-card:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .stat-card.warning {
+        background: #fff8e7;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .stat-card.danger {
+        background: #fee9e9;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .stat-card.success {
+        background: #e6f7e6;
+        border-left: 4px solid #10b981;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #667eea;
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stat-content h6 {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-content h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    
+    .stat-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    /* Low Stock Alert Banner */
+    .low-stock-alert {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        animation: pulse 2s infinite;
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .low-stock-alert:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
+        border-color: rgba(255,255,255,0.5);
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.95; }
+        100% { opacity: 1; }
+    }
+    
+    .low-stock-alert .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .low-stock-alert .alert-content i {
+        font-size: 1.5rem;
+    }
+    
+    .low-stock-alert .alert-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        backdrop-filter: blur(5px);
+    }
+    
+    .low-stock-items {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stock-item {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        backdrop-filter: blur(5px);
+        transition: all 0.2s ease;
+        cursor: pointer;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .stock-item:hover {
+        background: rgba(255,255,255,0.4);
+        transform: scale(1.05);
+        color: white;
+    }
+    
+    .stock-item i {
+        color: white;
+    }
+    
+    .alert-hover-text {
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(255,255,255,0.15);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+    }
+    
+    /* Search Box */
+    .search-wrapper {
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-box {
+        position: relative;
+        width: 100%;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+        z-index: 10;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 45px;
+        border-radius: 50px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    /* Button Styles */
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: 0.3px;
+        text-decoration: none;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-add i {
+        font-size: 1.1rem;
+    }
+    
+    /* Filter Section */
+    .filter-wrapper {
+        padding: 0 2rem 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+    
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .filter-item label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .filter-item select,
+    .filter-item input {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .filter-item select:focus,
+    .filter-item input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-filter {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .btn-filter:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        transform: translateY(-2px);
+    }
+    
+    .btn-reset {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-reset:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    /* Table Styling */
+    .table-wrapper {
+        padding: 0 2rem 2rem 2rem;
+    }
+    
+    .table-orders {
+        margin-bottom: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    
+    .table-orders thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+    
+    .table-orders tbody tr {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
+    }
+    
+    .table-orders tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    
+    .table-orders tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.95rem;
+    }
+    
+    /* Order ID */
+    .order-id {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 0.9rem;
+    }
+    
+    /* Customer Info */
+    .customer-info h6 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+        font-size: 0.95rem;
+    }
+    
+    .customer-info small {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        display: block;
+    }
+    
+    /* Items Badge */
+    .items-badge {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.2rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .items-badge i {
+        color: #667eea;
+    }
+    
+    /* Status Badges */
+    .badge-status {
+        padding: 0.35rem 1rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .badge-status.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .badge-status.processing {
+        background: #cce5ff;
+        color: #004085;
+    }
+    
+    .badge-status.delivered {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .badge-status.cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    /* Profit Badge */
+    .profit-badge {
+        background: #e6f7e6;
+        color: #0a7e0a;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    
+    .profit-badge.negative {
+        background: #fee9e9;
+        color: #b91c1c;
+    }
+    
+    /* Amount */
+    .amount {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    /* Action Button */
+    .btn-action {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        color: #64748b;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+        color: #334155;
+        transform: translateY(-2px);
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        padding: 0.5rem;
+    }
+    
+    .dropdown-item {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        color: #4a5568;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .dropdown-item i {
+        font-size: 1rem;
+        width: 1.2rem;
+    }
+    
+    .dropdown-item:hover {
+        background: #f1f5f9;
+    }
+    
+    .dropdown-item.text-danger:hover {
+        background: #fee9e9;
+    }
+    
+    /* Multi-Product Order Modal */
+    .product-row {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .product-row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-row-title {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .remove-product {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .remove-product:hover {
+        background: #fecaca;
+        transform: scale(1.1);
+    }
+    
+    .add-product-btn {
+        background: #f1f5f9;
+        color: #475569;
+        border: 2px dashed #cbd5e0;
+        border-radius: 12px;
+        padding: 0.8rem;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 1rem;
+    }
+    
+    .add-product-btn:hover {
+        background: #e2e8f0;
+        border-color: #94a3b8;
+    }
+    
+    .product-item-total {
+        font-weight: 600;
+        color: #10b981;
+    }
+    
+    /* Modal */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 24px 24px 0 0;
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-body {
+        padding: 2rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    /* Price Summary */
+    .price-summary {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.6rem 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .summary-row.total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #1e293b;
+        border-top: 2px solid #e2e8f0;
+        padding-top: 1rem;
+    }
+    
+    .summary-row.profit {
+        color: #0a7e0a;
+        font-weight: 600;
+        background: #e6f7e6;
+        padding: 0.8rem;
+        border-radius: 10px;
+        margin-top: 0.5rem;
+    }
+    
+    .summary-row.profit.negative {
+        color: #b91c1c;
+        background: #fee9e9;
+    }
+    
+    /* Stock Warning */
+    .stock-warning {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        display: none;
+    }
+    
+    .stock-warning.show {
+        display: block;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-save:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h5 {
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-header-custom {
+            padding: 1.5rem;
+        }
+        
+        .search-wrapper {
+            max-width: 100%;
+        }
+        
+        .stats-wrapper {
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filter-wrapper {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+        
+        .table-wrapper {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            overflow-x: auto;
+        }
+        
+        .low-stock-alert {
+            margin: 1rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Orders Management</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Orders</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Low Stock Alert Banner -->
+            {% if low_stock_count and low_stock_count > 0 %}
+            <div class="low-stock-alert" onclick="window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                <div class="alert-content">
+                    <i class="ri-alert-line"></i>
+                    <span>
+                        <strong>Low Stock Alert!</strong>
+                        {{ low_stock_count }} product(s) have stock ≤5 units
+                    </span>
+                    <span class="alert-badge">{{ low_stock_count }}</span>
+                </div>
+                <div class="low-stock-items">
+                    <span class="stock-item" onclick="event.stopPropagation(); window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                        <i class="ri-capsule-line"></i>
+                        Click to add stock
+                    </span>
+                </div>
+                <div class="alert-hover-text">
+                    <i class="ri-arrow-right-line"></i> Manage Stock
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="row">
+                <div class="col-12">
+                    <!-- Main Card -->
+                    <div class="main-card">
+                        <!-- Card Header -->
+                        <div class="card-header-custom">
+                            <h5>
+                                <i class="ri-shopping-cart-line"></i>
+                                Order Management
+                            </h5>
+                            <div class="search-wrapper">
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" class="form-control" id="searchOrder" 
+                                           placeholder="Search by Order ID, Customer...">
+                                </div>
+                            </div>
+                            <a href="{{ url_for('orders.create_order') }}" class="btn-add">
+                                <i class="ri-add-line"></i>
+                                Create New Order
+                            </a>
+                        </div>
+
+                        <!-- Statistics Cards -->
+                        <div class="stats-wrapper">
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('orders.order_list') }}'">
+                                <div class="stat-icon">
+                                    <i class="ri-shopping-cart-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Orders</h6>
+                                    <h3>{{ total_orders }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card {% if total_profit < 0 %}danger{% else %}success{% endif %}"
+                                 onclick="window.location.href='{{ url_for('orders.order_list') }}?sort=amount'">
+                                <div class="stat-icon">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Revenue</h6>
+                                    <h3>₹{{ "{:,.0f}".format(total_revenue) }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card {% if total_profit < 0 %}danger{% else %}success{% endif %}"
+                                 onclick="window.location.href='{{ url_for('orders.order_list') }}?sort=profit'">
+                                <div class="stat-icon">
+                                    <i class="ri-bar-chart-2-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Profit</h6>
+                                    <h3>₹{{ "{:,.0f}".format(total_profit) }}</h3>
+                                </div>
+                                {% if total_profit < 0 %}
+                                <span class="stat-badge bg-danger">Loss</span>
+                                {% endif %}
+                            </div>
+                            <div class="stat-card {% if low_stock_count > 0 %}warning{% endif %}"
+                                 onclick="window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                                <div class="stat-icon">
+                                    <i class="ri-alert-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Low Stock</h6>
+                                    <h3>{{ low_stock_count }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Summary Cards -->
+                        <div class="stats-wrapper">
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('orders.order_list') }}?status=Pending'">
+                                <div class="stat-content">
+                                    <h6>Pending</h6>
+                                    <h3>{{ pending_count }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('orders.order_list') }}?status=Processing'">
+                                <div class="stat-content">
+                                    <h6>Processing</h6>
+                                    <h3>{{ processing_count }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('orders.order_list') }}?status=Delivered'">
+                                <div class="stat-content">
+                                    <h6>Delivered</h6>
+                                    <h3>{{ delivered_count }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('orders.order_list') }}?status=Cancelled'">
+                                <div class="stat-content">
+                                    <h6>Cancelled</h6>
+                                    <h3>{{ cancelled_count }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Section -->
+                        <div class="filter-wrapper">
+                            <form method="GET" action="{{ url_for('orders.order_list') }}" class="filter-row" id="filterForm">
+                                <div class="filter-item">
+                                    <label>Search</label>
+                                    <input type="text" name="search" class="form-control" placeholder="Order ID or Customer" 
+                                           value="{{ search or '' }}">
+                                </div>
+                                <div class="filter-item">
+                                    <label>Status</label>
+                                    <select name="status" class="form-select" onchange="this.form.submit()">
+                                        <option value="">All Status</option>
+                                        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                                        <option value="Processing" {% if status_filter == 'Processing' %}selected{% endif %}>Processing</option>
+                                        <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                        <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </div>
+                                <div class="filter-item">
+                                    <label>From Date</label>
+                                    <input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}">
+                                </div>
+                                <div class="filter-item">
+                                    <label>To Date</label>
+                                    <input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}">
+                                </div>
+                                <div class="filter-item">
+                                    <button type="submit" class="btn-filter">
+                                        <i class="ri-filter-3-line"></i>
+                                        Apply
+                                    </button>
+                                </div>
+                                <div class="filter-item">
+                                    <a href="{{ url_for('orders.order_list') }}" class="btn-reset">
+                                        <i class="ri-refresh-line"></i>
+                                        Reset
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Orders Table -->
+                        <div class="table-wrapper">
+                            {% if orders %}
+                            <div class="table-responsive">
+                                <table class="table-orders" id="ordersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Date</th>
+                                            <th>Customer</th>
+                                            <th>Items</th>
+                                            <th>Amount</th>
+                                            <th>Profit</th>
+                                            <th>Status</th>
+                                            <th>Payment</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in orders %}
+                                        <tr>
+                                            <td>
+                                                <span class="order-id">{{ order.order_id }}</span>
+                                            </td>
+                                            <td>{{ order.order_date.strftime('%d %b %Y') }}</td>
+                                            <td>
+                                                <div class="customer-info">
+                                                    <h6>{{ order.customer_name }}</h6>
+                                                    <small>{{ order.customer_email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="items-badge">
+                                                    <i class="ri-stack-line"></i>
+                                                    {{ order.get_item_count() }} items
+                                                </span>
+                                                <small class="text-muted d-block">({{ order.get_total_quantity() }} qty)</small>
+                                            </td>
+                                            <td class="amount">₹{{ "{:,.2f}".format(order.final_amount) }}</td>
+                                            <td>
+                                                {% set profit = order.profit or 0 %}
+                                                <span class="profit-badge {% if profit < 0 %}negative{% endif %}">
+                                                    <i class="ri-{{ 'arrow-up' if profit > 0 else 'arrow-down' if profit < 0 else 'subtract' }}-line"></i>
+                                                    ₹{{ "{:,.2f}".format(profit) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge-status {{ order.status.lower() }}">
+                                                    {{ order.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small>{{ order.payment_method }}</small><br>
+                                                <small class="text-muted">{{ order.payment_status }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn-action" type="button" data-bs-toggle="dropdown">
+                                                        <i class="ri-more-2-fill"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ url_for('orders.order_details', id=order.id) }}">
+                                                                <i class="ri-eye-line text-info"></i>
+                                                                View Details
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ url_for('orders.order_invoice', id=order.id) }}">
+                                                                <i class="ri-file-pdf-line text-danger"></i>
+                                                                Invoice
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
+                                                        <li>
+                                                            <form method="POST" action="{{ url_for('orders.update_order_status', id=order.id) }}" style="display: inline;">
+                                                                <input type="hidden" name="status" value="Processing">
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="ri-loader-4-line text-primary"></i>
+                                                                    Mark Processing
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form method="POST" action="{{ url_for('orders.update_order_status', id=order.id) }}" style="display: inline;">
+                                                                <input type="hidden" name="status" value="Delivered">
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="ri-checkbox-circle-line text-success"></i>
+                                                                    Mark Delivered
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form method="POST" action="{{ url_for('orders.update_order_status', id=order.id) }}" style="display: inline;">
+                                                                <input type="hidden" name="status" value="Cancelled">
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="ri-close-circle-line text-danger"></i>
+                                                                    Mark Cancelled
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        {% if order.status == 'Pending' %}
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
+                                                        <li>
+                                                            <button class="dropdown-item text-danger delete-btn"
+                                                                    data-id="{{ order.id }}"
+                                                                    data-order="{{ order.order_id }}"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#deleteOrderModal">
+                                                                <i class="ri-delete-bin-line"></i>
+                                                                Delete Order
+                                                            </button>
+                                                        </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <i class="ri-shopping-cart-line"></i>
+                                <h5>No Orders Found</h5>
+                                <p class="text-muted">Click "Create New Order" to create your first order</p>
+                                <a href="{{ url_for('orders.create_order') }}" class="btn-add">
+                                    <i class="ri-add-line"></i>
+                                    Create New Order
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Order Modal (Multi-Product) -->
+<div class="modal fade" id="addOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-add-circle-line me-2"></i>Create New Order (Multi-Product)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('orders.create_order') }}" id="createOrderForm">
+                    <!-- Customer Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Select Customer <span class="text-danger">*</span></label>
+                            <select class="form-select" name="customer_id" id="customerSelect" required>
+                                <option value="">-- Choose Customer --</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}" data-email="{{ customer.email }}" data-phone="{{ customer.phone }}">
+                                    {{ customer.name }} ({{ customer.email }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="customer-info-card p-3 bg-light rounded" id="customerInfo" style="display: none;">
+                                <small class="text-muted">Selected Customer</small>
+                                <p class="mb-1" id="selectedCustomerName"></p>
+                                <small id="selectedCustomerEmail" class="text-muted"></small><br>
+                                <small id="selectedCustomerPhone" class="text-muted"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Container -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Products <span class="text-danger">*</span></label>
+                        <div id="productsContainer">
+                            <!-- Product rows will be added here dynamically -->
+                        </div>
+                        <div class="add-product-btn" id="addProductRow">
+                            <i class="ri-add-line me-2"></i>Add Another Product
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" name="payment_method">
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Payment Status</label>
+                            <select class="form-select" name="payment_status">
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid">Unpaid</option>
+                                <option value="Partial">Partial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Order Status</label>
+                            <select class="form-select" name="status">
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Delivered">Delivered</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="2" placeholder="Add any notes about this order..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="price-summary mt-4">
+                        <h6 class="mb-3">Order Summary</h6>
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="summarySubtotal">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount:</span>
+                            <span id="summaryDiscount" class="text-danger">-₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>After Discount:</span>
+                            <span id="summaryAfterDiscount">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>GST:</span>
+                            <span id="summaryGST">+₹0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Final Amount:</span>
+                            <span id="summaryTotal">₹0.00</span>
+                        </div>
+                        <div class="summary-row profit" id="summaryProfitRow">
+                            <span>Total Profit:</span>
+                            <span id="summaryProfit">₹0.00</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="ri-close-line"></i>
+                    Cancel
+                </button>
+                <button type="submit" form="createOrderForm" class="btn btn-save" id="createOrderBtn">
+                    <i class="ri-save-3-line"></i>
+                    Create Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Order Modal -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-delete-bin-line me-2"></i>
+                    Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                          colors="primary:#f7b84b,secondary:#f06548" 
+                          style="width:80px;height:80px">
+                </lord-icon>
+                <h5 class="mt-3">Are you sure?</h5>
+                <p class="text-muted">
+                    Order <strong id="deleteOrderId"></strong> will be permanently deleted.<br>
+                    Stock will be restored automatically.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="deleteOrderForm">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        <i class="ri-close-line"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ri-delete-bin-line"></i>
+                        Delete Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Row Template (Hidden) -->
+<template id="productRowTemplate">
+    <div class="product-row">
+        <div class="product-row-header">
+            <span class="product-row-title">Product <span class="product-index"></span></span>
+            <button type="button" class="remove-product" title="Remove Product">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <select class="form-select product-select" name="items[0][product_id]" required>
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" 
+                            data-suggested="{{ product.suggested_selling_price or 0 }}"
+                            data-stock="{{ product.get_current_stock() }}"
+                            data-cost="{{ product.get_average_purchase_price() }}">
+                        {{ product.title }} - ₹{{ product.suggested_selling_price or 0 }} 
+                        (Stock: {{ product.get_current_stock() }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="stock-info text-muted"></small>
+            </div>
+            <div class="col-md-2 mb-2">
+                <input type="number" class="form-control product-quantity" name="items[0][quantity]" 
+                       value="1" min="1" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input type="number" step="0.01" class="form-control product-price" 
+                           name="items[0][selling_price]" value="0" required>
+                </div>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="input-group">
+                    <input type="number" step="0.01" class="form-control product-discount" 
+                           name="items[0][discount]" value="0" min="0" max="100">
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="input-group">
+                    <input type="number" step="0.01" class="form-control product-gst" 
+                           name="items[0][gst]" value="18" min="0">
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12 text-end">
+                <small class="text-muted">Subtotal: <span class="product-subtotal">₹0.00</span></small>
+                <span class="mx-2">|</span>
+                <small class="text-muted">Total: <span class="product-total fw-bold">₹0.00</span></small>
+                <span class="mx-2">|</span>
+                <small class="text-success">Profit: <span class="product-profit">₹0.00</span></small>
+            </div>
+        </div>
+        <div class="stock-warning"></div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery, Select2, DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<!-- Lordicon -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ===== INITIALIZE DATATABLE =====
+    var table = $('#ordersTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        order: [[1, 'desc']],
+        columnDefs: [
+            { orderable: false, targets: [8] }
+        ],
+        language: {
+            emptyTable: "No orders found",
+            search: "",
+            searchPlaceholder: "Search..."
+        },
+        dom: 'rt<"bottom"lip>',
+        initComplete: function() {
+            $('.dataTables_filter').hide();
+        }
+    });
+
+    // Connect search
+    $('#searchOrder').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+
+    // ===== MULTI-PRODUCT ORDER FORM =====
+    let productIndex = 0;
+    const productsContainer = document.getElementById('productsContainer');
+    const template = document.getElementById('productRowTemplate');
+    const addButton = document.getElementById('addProductRow');
+    
+    // Summary elements
+    const summarySubtotal = document.getElementById('summarySubtotal');
+    const summaryDiscount = document.getElementById('summaryDiscount');
+    const summaryAfterDiscount = document.getElementById('summaryAfterDiscount');
+    const summaryGST = document.getElementById('summaryGST');
+    const summaryTotal = document.getElementById('summaryTotal');
+    const summaryProfit = document.getElementById('summaryProfit');
+    const summaryProfitRow = document.getElementById('summaryProfitRow');
+    const createOrderBtn = document.getElementById('createOrderBtn');
+
+    // Customer info display
+    const customerSelect = document.getElementById('customerSelect');
+    const customerInfo = document.getElementById('customerInfo');
+    const selectedCustomerName = document.getElementById('selectedCustomerName');
+    const selectedCustomerEmail = document.getElementById('selectedCustomerEmail');
+    const selectedCustomerPhone = document.getElementById('selectedCustomerPhone');
+
+    customerSelect.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        if (selected && selected.value) {
+            selectedCustomerName.textContent = selected.text.split('(')[0].trim();
+            selectedCustomerEmail.textContent = selected.dataset.email || '';
+            selectedCustomerPhone.textContent = selected.dataset.phone || '';
+            customerInfo.style.display = 'block';
+        } else {
+            customerInfo.style.display = 'none';
+        }
+    });
+
+    // Add first product row on modal open
+    document.getElementById('addOrderModal').addEventListener('show.bs.modal', function() {
+        if (productsContainer.children.length === 0) {
+            addProductRow();
+        }
+    });
+
+    // Reset form on modal close
+    document.getElementById('addOrderModal').addEventListener('hidden.bs.modal', function() {
+        productsContainer.innerHTML = '';
+        productIndex = 0;
+        customerSelect.value = '';
+        customerInfo.style.display = 'none';
+        updateSummary();
+    });
+
+    // Add product row
+    function addProductRow() {
+        const clone = template.content.cloneNode(true);
+        const row = clone.querySelector('.product-row');
+        
+        // Update index
+        const index = productIndex;
+        row.querySelectorAll('[name^="items["]').forEach(input => {
+            input.name = input.name.replace('[0]', `[${index}]`);
+        });
+        
+        // Set product index display
+        row.querySelector('.product-index').textContent = index + 1;
+        
+        // Add event listeners
+        const select = row.querySelector('.product-select');
+        const quantity = row.querySelector('.product-quantity');
+        const price = row.querySelector('.product-price');
+        const discount = row.querySelector('.product-discount');
+        const gst = row.querySelector('.product-gst');
+        const removeBtn = row.querySelector('.remove-product');
+        const stockWarning = row.querySelector('.stock-warning');
+        
+        select.addEventListener('change', () => updateProductRow(row));
+        quantity.addEventListener('input', () => updateProductRow(row));
+        price.addEventListener('input', () => updateProductRow(row));
+        discount.addEventListener('input', () => updateProductRow(row));
+        gst.addEventListener('input', () => updateProductRow(row));
+        
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            updateSummary();
+        });
+        
+        productsContainer.appendChild(row);
+        productIndex++;
+        updateProductRow(row);
+    }
+
+    // Update individual product row calculations
+    function updateProductRow(row) {
+        const select = row.querySelector('.product-select');
+        const quantity = parseInt(row.querySelector('.product-quantity').value) || 1;
+        const price = parseFloat(row.querySelector('.product-price').value) || 0;
+        const discount = parseFloat(row.querySelector('.product-discount').value) || 0;
+        const gst = parseFloat(row.querySelector('.product-gst').value) || 0;
+        
+        const selected = select.options[select.selectedIndex];
+        const stockInfo = row.querySelector('.stock-info');
+        const stockWarning = row.querySelector('.stock-warning');
+        
+        if (selected && selected.value) {
+            const maxStock = parseInt(selected.dataset.stock) || 0;
+            const costPrice = parseFloat(selected.dataset.cost) || 0;
+            const suggestedPrice = parseFloat(selected.dataset.suggested) || 0;
+            
+            // Show stock info
+            stockInfo.textContent = `Available: ${maxStock} units`;
+            stockInfo.className = maxStock <= 5 ? 'stock-info low-stock text-danger' : 'stock-info text-muted';
+            
+            // Check stock
+            if (quantity > maxStock) {
+                stockWarning.textContent = `⚠️ Only ${maxStock} units available!`;
+                stockWarning.classList.add('show');
+            } else {
+                stockWarning.classList.remove('show');
+            }
+            
+            // Auto-fill suggested price
+            if (price === 0 && suggestedPrice > 0) {
+                row.querySelector('.product-price').value = suggestedPrice;
+            }
+            
+            // Calculate
+            const subtotal = quantity * price;
+            const discountAmount = subtotal * (discount / 100);
+            const afterDiscount = subtotal - discountAmount;
+            const gstAmount = afterDiscount * (gst / 100);
+            const total = afterDiscount + gstAmount;
+            const profit = (price - costPrice) * quantity;
+            
+            // Update display
+            row.querySelector('.product-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            row.querySelector('.product-total').textContent = `₹${total.toFixed(2)}`;
+            row.querySelector('.product-profit').textContent = `₹${profit.toFixed(2)}`;
+        }
+        
+        updateSummary();
+    }
+
+    // Update overall order summary
+    function updateSummary() {
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalGST = 0;
+        let totalProfit = 0;
+        let validItems = 0;
+        
+        document.querySelectorAll('.product-row').forEach(row => {
+            const select = row.querySelector('.product-select');
+            const quantity = parseInt(row.querySelector('.product-quantity').value) || 1;
+            const price = parseFloat(row.querySelector('.product-price').value) || 0;
+            const discount = parseFloat(row.querySelector('.product-discount').value) || 0;
+            const gst = parseFloat(row.querySelector('.product-gst').value) || 0;
+            
+            const selected = select.options[select.selectedIndex];
+            if (selected && selected.value) {
+                const costPrice = parseFloat(selected.dataset.cost) || 0;
+                
+                const rowSubtotal = quantity * price;
+                const rowDiscount = rowSubtotal * (discount / 100);
+                const rowAfterDiscount = rowSubtotal - rowDiscount;
+                const rowGST = rowAfterDiscount * (gst / 100);
+                const rowProfit = (price - costPrice) * quantity;
+                
+                subtotal += rowSubtotal;
+                totalDiscount += rowDiscount;
+                totalGST += rowGST;
+                totalProfit += rowProfit;
+                validItems++;
+            }
+        });
+        
+        const afterDiscount = subtotal - totalDiscount;
+        const finalAmount = afterDiscount + totalGST;
+        
+        // Update summary
+        summarySubtotal.textContent = `₹${subtotal.toFixed(2)}`;
+        summaryDiscount.textContent = `-₹${totalDiscount.toFixed(2)}`;
+        summaryAfterDiscount.textContent = `₹${afterDiscount.toFixed(2)}`;
+        summaryGST.textContent = `+₹${totalGST.toFixed(2)}`;
+        summaryTotal.textContent = `₹${finalAmount.toFixed(2)}`;
+        summaryProfit.textContent = `₹${totalProfit.toFixed(2)}`;
+        
+        // Update profit row color
+        if (totalProfit < 0) {
+            summaryProfitRow.classList.add('negative');
+        } else {
+            summaryProfitRow.classList.remove('negative');
+        }
+        
+        // Enable/disable submit button
+        createOrderBtn.disabled = validItems === 0;
+    }
+
+    addButton.addEventListener('click', addProductRow);
+
+    // ===== DELETE FUNCTIONALITY =====
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteForm = document.getElementById('deleteOrderForm');
+    const deleteOrderIdSpan = document.getElementById('deleteOrderId');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-id');
+            const orderNumber = this.getAttribute('data-order');
+            deleteForm.action = "{{ url_for('orders.delete_order', id=0) }}".replace('0', orderId);
+            if (deleteOrderIdSpan) {
+                deleteOrderIdSpan.textContent = orderNumber;
+            }
+        });
+    });
+
+    // ===== AUTO-SUBMIT FILTERS =====
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.querySelectorAll('input[type="date"]').forEach(input => {
+            input.addEventListener('change', () => filterForm.submit());
+        });
+    }
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

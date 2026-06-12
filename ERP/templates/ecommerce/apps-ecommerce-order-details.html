@@ -1,0 +1,1204 @@
+{% extends "partials/base.html" %}
+{% block title %}Order Details - {{ order.order_id }}{% endblock title %}
+
+{% block extra_css %}
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Main Card Styling */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+        margin-bottom: 30px;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header with Gradient */
+    .card-header-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.8rem 2rem;
+        border-bottom: none;
+    }
+    
+    .card-header-gradient h4 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 1.6rem;
+    }
+    
+    .card-header-gradient h4 i {
+        font-size: 2rem;
+    }
+    
+    .card-header-gradient p {
+        margin-bottom: 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Order Status Banner */
+    .status-banner {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 2rem;
+        border: 1px solid #eef2f6;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+    }
+    
+    .order-id-large {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .order-id-large .id-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+    }
+    
+    .order-id-large .id-details h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+    }
+    
+    .order-id-large .id-details p {
+        color: #64748b;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .status-pill-large {
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .status-pill-large i {
+        font-size: 1.3rem;
+    }
+    
+    .status-pill-large.pending {
+        background: #fff3cd;
+        color: #856404;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .status-pill-large.processing {
+        background: #cce5ff;
+        color: #004085;
+        border-left: 4px solid #007bff;
+    }
+    
+    .status-pill-large.delivered {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+    
+    .status-pill-large.cancelled {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+    
+    /* Info Cards */
+    .info-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.5rem;
+        height: 100%;
+        border: 1px solid #eef2f6;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(102, 126, 234, 0.1);
+    }
+    
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .info-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-header .icon-circle {
+        width: 45px;
+        height: 45px;
+        background: white;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 1.4rem;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.15);
+    }
+    
+    .info-header h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+    }
+    
+    .info-header p {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0;
+    }
+    
+    .info-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .info-row {
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        width: 100px;
+        color: #64748b;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-label i {
+        color: #667eea;
+        font-size: 1rem;
+        width: 20px;
+    }
+    
+    .info-value {
+        flex: 1;
+        color: #1e293b;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .value-badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .value-highlight {
+        color: #667eea;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    /* Summary Card */
+    .summary-card {
+        background: white;
+        border-radius: 18px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.02);
+        border: 1px solid #eef2f6;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-label {
+        color: #64748b;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .summary-label i {
+        color: #667eea;
+        width: 20px;
+    }
+    
+    .summary-amount {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .summary-total {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1e293b;
+        border-top: 2px solid #e2e8f0;
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .profit-badge-large {
+        background: #e6f7e6;
+        color: #0a7e0a;
+        padding: 0.8rem 1.2rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1rem;
+        font-weight: 600;
+    }
+    
+    .profit-badge-large.negative {
+        background: #fee9e9;
+        color: #b91c1c;
+    }
+    
+    .profit-badge-large i {
+        font-size: 1.2rem;
+    }
+    
+    .profit-percent {
+        background: rgba(255,255,255,0.5);
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+    }
+    
+    /* Items Table */
+    .items-table-container {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid #eef2f6;
+    }
+    
+    .items-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    
+    .items-table thead th {
+        background: #f1f5f9;
+        padding: 1rem 1.2rem;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 12px;
+    }
+    
+    .items-table tbody tr {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
+    }
+    
+    .items-table tbody tr:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+    }
+    
+    .items-table tbody td {
+        padding: 1.2rem;
+        border: none;
+        vertical-align: middle;
+    }
+    
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .product-icon {
+        width: 45px;
+        height: 45px;
+        background: #f0f9ff;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0369a1;
+        font-size: 1.2rem;
+    }
+    
+    .product-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-name {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+    
+    .product-sku {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .product-sku i {
+        color: #667eea;
+    }
+    
+    .product-category {
+        font-size: 0.7rem;
+        color: #667eea;
+        background: #e0f2fe;
+        padding: 0.2rem 0.6rem;
+        border-radius: 30px;
+        display: inline-block;
+        margin-top: 0.2rem;
+    }
+    
+    .quantity-badge {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.4rem 0.8rem;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+    
+    .price-cell {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .discount-cell {
+        color: #ef4444;
+        font-weight: 500;
+    }
+    
+    .gst-cell {
+        color: #10b981;
+        font-weight: 500;
+    }
+    
+    .total-cell {
+        font-weight: 700;
+        color: #1e293b;
+    }
+    
+    .profit-cell {
+        font-weight: 600;
+    }
+    
+    .profit-cell.positive {
+        color: #0a7e0a;
+        background: #e6f7e6;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        display: inline-block;
+    }
+    
+    .profit-cell.negative {
+        color: #b91c1c;
+        background: #fee9e9;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        display: inline-block;
+    }
+    
+    /* Notes Section */
+    .notes-card {
+        background: #fff8e7;
+        border-radius: 18px;
+        padding: 1.5rem;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .notes-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .notes-header i {
+        color: #f59e0b;
+        font-size: 1.3rem;
+    }
+    
+    .notes-header h6 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0;
+    }
+    
+    /* Status Update Form */
+    .status-update-card {
+        background: #f0f9ff;
+        border-radius: 18px;
+        padding: 1.5rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .status-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .status-select {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        background: white;
+    }
+    
+    .status-select:focus {
+        border-color: #667eea;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-update {
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-update:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding: 0 2rem 2rem;
+    }
+    
+    .btn-action {
+        padding: 0.8rem 2rem;
+        border-radius: 14px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-back {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .btn-back:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+        transform: translateY(-2px);
+    }
+    
+    .btn-invoice {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+    
+    .btn-invoice:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+    }
+    
+    .btn-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+    }
+    
+    /* Modal */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 24px 24px 0 0;
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+    
+    .modal-body {
+        padding: 2rem;
+    }
+    
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.7rem 2rem;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Full Edit Mode Styles */
+    .edit-mode-input {
+        width: 80px;
+        padding: 0.4rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .edit-mode-input:focus {
+        border-color: #667eea;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .product-select-edit {
+        min-width: 200px;
+        padding: 0.4rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+    }
+    
+    .btn-add-item {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-add-item:hover {
+        background: #059669;
+    }
+    
+    .btn-remove-item {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-remove-item:hover {
+        background: #fecaca;
+    }
+    
+    .edit-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-cancel-edit {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+    }
+    
+    .btn-save-edit {
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+    }
+    
+    .edit-badge {
+        background: #f59e0b;
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .status-banner {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .order-id-large {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .status-pill-large {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .status-form {
+            flex-direction: column;
+        }
+        
+        .status-select {
+            width: 100%;
+        }
+        
+        .btn-update {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Order Details</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('orders.order_list') }}">Orders</a></li>
+                                <li class="breadcrumb-item active">{{ order.order_id }}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Main Card -->
+            <div class="main-card">
+                <!-- Card Header -->
+                <div class="card-header-gradient">
+                    <h4>
+                        <i class="fas fa-shopping-cart"></i>
+                        Order Details
+                        {% if edit_mode %}
+                        <span class="edit-badge">
+                            <i class="fas fa-edit"></i> Edit Mode
+                        </span>
+                        {% endif %}
+                    </h4>
+                    <p>
+                        <i class="fas fa-info-circle"></i>
+                        Complete information about order #{{ order.order_id }}
+                    </p>
+                </div>
+
+                <!-- Order Status Banner -->
+                <div class="status-banner">
+                    <div class="order-id-large">
+                        <div class="id-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="id-details">
+                            <h2>#{{ order.order_id }}</h2>
+                            <p>
+                                <i class="far fa-calendar-alt"></i>
+                                {{ order.order_date.strftime('%d %B %Y, %I:%M %p') if order.order_date else '—' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="status-pill-large {{ order.status.lower() if order.status else 'pending' }}">
+                            <i class="fas fa-{{ 'clock' if order.status == 'Pending' 
+                                               else 'sync-alt' if order.status == 'Processing' 
+                                               else 'check-circle' if order.status == 'Delivered' 
+                                               else 'times-circle' }}"></i>
+                            {{ order.status or 'Pending' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Customer & Order Info Row -->
+                <div class="row px-4">
+                    <!-- Customer Information -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="icon-circle">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5>Customer Information</h5>
+                                    <p>Personal details</p>
+                                </div>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-user"></i>Name</span>
+                                    <span class="info-value">{{ order.customer_name }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-envelope"></i>Email</span>
+                                    <span class="info-value">{{ order.customer_email or '—' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-phone"></i>Phone</span>
+                                    <span class="info-value">{{ order.customer_phone or '—' }}</span>
+                                </div>
+                                {% if customer and customer.address %}
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-map-marker-alt"></i>Address</span>
+                                    <span class="info-value">
+
+                                    {% if customer and customer.address %}
+                                    <p>{{ customer.address }}<br>
+                                    {{ customer.city }}{% if customer.city and customer.state %}, {% endif %}{{ customer.state }} - {{ customer.pincode }}</p>
+                                    {% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-tag"></i>Customer ID</span>
+                                    <span class="info-value"><span class="value-badge">#{{ customer.id if customer else 'N/A' }}</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Information -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="icon-circle">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div>
+                                    <h5>Order Information</h5>
+                                    <p>Transaction details</p>
+                                </div>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-hashtag"></i>Order ID</span>
+                                    <span class="info-value value-highlight">{{ order.order_id }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-file-invoice"></i>Invoice</span>
+                                    <span class="info-value">{{ order.invoice_number or '—' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-calendar"></i>Order Date</span>
+                                    <span class="info-value">{{ order.order_date.strftime('%d %b %Y') }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-credit-card"></i>Payment</span>
+                                    <span class="info-value">{{ order.payment_method or 'Cash' }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-money-bill"></i>Payment Status</span>
+                                    <span class="info-value">
+                                        <span class="badge bg-{{ 'success' if order.payment_status == 'Paid' 
+                                                              else 'warning' if order.payment_status == 'Partial' 
+                                                              else 'danger' }}">
+                                            {{ order.payment_status or 'Unpaid' }}
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-boxes"></i>Items</span>
+                                    <span class="info-value">{{ order.get_item_count() }} products ({{ order.get_total_quantity() }} units)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="icon-circle">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <div>
+                                    <h5>Order Summary</h5>
+                                    <p>Financial breakdown</p>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-item">
+                                    <span class="summary-label"><i class="fas fa-shopping-bag"></i>Subtotal</span>
+                                    <span class="summary-amount">₹{{ "{:,.2f}".format(order.subtotal or 0) }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label"><i class="fas fa-tag"></i>Discount</span>
+                                    <span class="summary-amount text-danger">-₹{{ "{:,.2f}".format(order.discount_amount or 0) }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label"><i class="fas fa-percent"></i>After Discount</span>
+                                    <span class="summary-amount">₹{{ "{:,.2f}".format(order.after_discount or 0) }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label"><i class="fas fa-calculator"></i>GST</span>
+                                    <span class="summary-amount text-success">+₹{{ "{:,.2f}".format(order.gst_amount or 0) }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label"><i class="fas fa-truck"></i>Shipping</span>
+                                    <span class="summary-amount">₹{{ "{:,.2f}".format(order.shipping_charge or 0) }}</span>
+                                </div>
+                                <div class="summary-item summary-total">
+                                    <span class="summary-label"><i class="fas fa-rupee-sign"></i>Final Amount</span>
+                                    <span class="summary-amount">₹{{ "{:,.2f}".format(order.final_amount or 0) }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Profit Display -->
+                            <div class="profit-badge-large {% if order.profit < 0 %}negative{% endif %}">
+                                <span><i class="fas fa-chart-line"></i> Total Profit</span>
+                                <span>
+                                    ₹{{ "{:,.2f}".format(order.profit or 0) }}
+                                    <span class="profit-percent">({{ "{:.1f}".format(profit_margin) }}%)</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items Section -->
+                <!-- Order Items Section -->
+                <div class="row px-4">
+                    <div class="col-12 mb-4">
+                        <div class="items-table-container">
+                            <div class="info-header mb-4">
+                                <div class="icon-circle">
+                                    <i class="fas fa-box-open"></i>
+                                </div>
+                                <div>
+                                    <h5>Order Items</h5>
+                                    <p>Products in this order</p>
+                                </div>
+                                <div class="ms-auto">
+                                    <span class="badge bg-info text-white">{{ items|length }} Item(s)</span>
+                                </div>
+                            </div>
+                            
+                            {% if items and items|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>SKU</th>
+                                            <th>Qty</th>
+                                            <th>Price (₹)</th>
+                                            <th>Discount %</th>
+                                            <th>GST %</th>
+                                            <th>Total (₹)</th>
+                                            <th>Profit (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in items %}
+                                        <tr>
+                                            <td>
+                                                <div class="product-info">
+                                                    <div class="product-icon">
+                                                        <i class="fas fa-cube"></i>
+                                                    </div>
+                                                    <div class="product-details">
+                                                        {% if item.product_name and item.product_name != 'None' %}
+                                                            <span class="product-name">{{ item.product_name }}</span>
+                                                        {% else %}
+                                                            {% if item.product %}
+                                                                <span class="product-name">{{ item.product.title }}</span>
+                                                                {% if not item.product_name or item.product_name == 'None' %}
+                                                                    {% set _ = item.update_product_snapshot() %}
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="product-name text-danger">Product #{{ item.product_id }} (Deleted)</span>
+                                                            {% endif %}
+                                                        {% endif %}
+                                                        
+                                                        {% if item.product_category and item.product_category != 'None' %}
+                                                            <span class="product-category">{{ item.product_category }}</span>
+                                                        {% elif item.product and item.product.category %}
+                                                            <span class="product-category">{{ item.product.category }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="product-sku">
+                                                    <i class="fas fa-barcode"></i>
+                                                    {% if item.product_sku and item.product_sku != 'None' %}
+                                                        {{ item.product_sku }}
+                                                    {% elif item.product and item.product.sku %}
+                                                        {{ item.product.sku }}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                            <td><span class="quantity-badge">{{ item.quantity }}</span></td>
+                                            <td class="price-cell">₹{{ "{:,.2f}".format(item.selling_price) }}</td>
+                                            <td class="discount-cell">{{ item.discount_percentage }}%</td>
+                                            <td class="gst-cell">{{ item.gst_percentage }}%</td>
+                                            <td class="total-cell">₹{{ "{:,.2f}".format(item.total) }}</td>
+                                            <td>
+                                                <span class="profit-cell {% if item.profit >= 0 %}positive{% else %}negative{% endif %}">
+                                                    ₹{{ "{:,.2f}".format(item.profit) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                <h5>No Items Found</h5>
+                                <p class="text-muted">This order has no items.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Notes Section -->
+                {% if order.notes %}
+                <div class="row px-4">
+                    <div class="col-12 mb-4">
+                        <div class="notes-card">
+                            <div class="notes-header">
+                                <i class="fas fa-sticky-note"></i>
+                                <h6>Order Notes</h6>
+                            </div>
+                            <p class="mb-0">{{ order.notes }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Status Update Form (only for non-cancelled/non-delivered orders) -->
+                {% if order.status != 'Cancelled' and order.status != 'Delivered' and not edit_mode %}
+                <div class="row px-4">
+                    <div class="col-12 mb-4">
+                        <div class="status-update-card">
+                            <div class="info-header mb-3">
+                                <div class="icon-circle" style="background: #e0f2fe;">
+                                    <i class="fas fa-edit" style="color: #0369a1;"></i>
+                                </div>
+                                <div>
+                                    <h5>Update Order Status</h5>
+                                    <p>Change the current order status</p>
+                                </div>
+                            </div>
+                            
+                            <form method="POST" action="{{ url_for('orders.update_order_status', id=order.id) }}" class="status-form">
+                                <select name="status" class="status-select">
+                                    <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>⏳ Pending</option>
+                                    <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>⚙️ Processing</option>
+                                    <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>✅ Delivered</option>
+                                    <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                                </select>
+                                <button type="submit" class="btn-update">
+                                    <i class="fas fa-sync-alt"></i> Update Status
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('orders.order_list') }}" class="btn-action btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Orders
+                    </a>
+                    <a href="{{ url_for('orders.order_invoice', id=order.id) }}" class="btn-action btn-invoice">
+                        <i class="fas fa-file-pdf"></i> View Invoice
+                    </a>
+                    {% if order.status == 'Pending' and not edit_mode %}
+                    <a href="{{ url_for('orders.edit_order', id=order.id) }}" class="btn-action btn-edit">
+                        <i class="fas fa-edit"></i> Edit Order
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Font Awesome -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<!-- Lordicon -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+    
+    // Status update confirmation for cancellation
+    const statusForm = document.querySelector('.status-update-card form');
+    if (statusForm) {
+        statusForm.addEventListener('submit', function(e) {
+            const newStatus = this.querySelector('select[name="status"]').value;
+            if (newStatus === 'Cancelled') {
+                if (!confirm('⚠️ Are you sure you want to cancel this order? Stock will be restored automatically.')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+    
+    // Add smooth hover effects
+    const cards = document.querySelectorAll('.info-card, .items-table tbody tr');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.3s ease';
+        });
+    });
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+
+{% endblock extra_js %}

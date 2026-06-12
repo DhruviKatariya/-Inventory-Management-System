@@ -1,0 +1,979 @@
+{% extends "partials/base.html" %}
+{% block title %}Products{% endblock title %}
+
+{% block extra_css %}
+<!-- Simple DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    /* Main Card - Clean and Simple */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header */
+    .card-header-custom {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .card-header-custom h5 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .card-header-custom h5 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+    
+    /* Low Stock Alert Banner */
+    {% if low_stock_count and low_stock_count > 0 %}
+    .low-stock-alert {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+        border: 2px solid transparent;
+    }
+    
+    .low-stock-alert:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
+        border-color: rgba(255,255,255,0.5);
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.95; }
+        100% { opacity: 1; }
+    }
+    
+    .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .alert-content i {
+        font-size: 1.5rem;
+    }
+    
+    .alert-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-weight: 600;
+    }
+    
+    .alert-hover-text {
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(255,255,255,0.15);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+    }
+    {% endif %}
+    
+    /* Search Box */
+    .search-wrapper {
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-box {
+        position: relative;
+        width: 100%;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 45px;
+        border-radius: 50px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .search-box input:focus + i {
+        color: #667eea;
+    }
+    
+    /* Add Button - Beautiful Purple */
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: 0.3px;
+        text-decoration: none;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-add i {
+        font-size: 1.1rem;
+    }
+    
+    /* Tabs - FIXED: Better visibility */
+    .tabs-wrapper {
+        padding: 0 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .nav-tabs-custom {
+        border: none;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .nav-tabs-custom .nav-link {
+        color: #64748b;
+        font-weight: 500;
+        border: none;
+        padding: 1rem 0.5rem;
+        font-size: 0.95rem;
+        transition: color 0.2s ease;
+        background: transparent;
+        position: relative;
+        margin-bottom: -1px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    /* REMOVED hover effect that changes background */
+    .nav-tabs-custom .nav-link:hover {
+        color: #334155;
+        background: transparent;
+    }
+    
+    .nav-tabs-custom .nav-link.active {
+        color: #667eea;
+        background: transparent;
+    }
+    
+    .nav-tabs-custom .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px 2px 0 0;
+    }
+    
+    .nav-tabs-custom .badge {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 500;
+        margin-left: 0.5rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 30px;
+        font-size: 0.75rem;
+    }
+    
+    .nav-tabs-custom .nav-link.active .badge {
+        background: #e0e7ff;
+        color: #667eea;
+    }
+    
+    /* Table */
+    .table-wrapper {
+        padding: 1.5rem 2rem;
+    }
+    
+    .table-products {
+        margin-bottom: 0;
+        width: 100%;
+    }
+    
+    .table-products thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+    
+    .table-products tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .table-products tbody tr:hover {
+        background: #faf9ff;
+    }
+    
+    /* Product Info */
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .product-image {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+    
+    .product-details h6 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+        font-size: 0.95rem;
+    }
+    
+    .product-details small {
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+    
+    /* Badges */
+    .badge-seller {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.35rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .badge-stock {
+        padding: 0.35rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .badge-stock.success {
+        background: #e6f7e6;
+        color: #0a7e0a;
+    }
+    
+    .badge-stock.warning {
+        background: #fff3d4;
+        color: #b45b0a;
+    }
+    
+    .badge-stock.danger {
+        background: #fee9e9;
+        color: #b91c1c;
+    }
+    
+    /* Status Badges - FIXED: Better text visibility */
+    .badge-status {
+        padding: 0.35rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+        min-width: 80px;
+    }
+    
+    .badge-status.published {
+        background: #e6f7e6;
+        color: #0a7e0a;  /* Dark green text for better visibility */
+        border: 1px solid #b7e0b7;
+    }
+    
+    .badge-status.draft {
+        background: #f1f5f9;
+        color: #1e293b;  /* Dark text for better visibility on light gray */
+        border: 1px solid #cbd5e0;
+    }
+    
+    /* Profit */
+    .profit-positive {
+        color: #0a7e0a;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .profit-negative {
+        color: #b91c1c;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .profit-neutral {
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    
+    .profit-percent {
+        color: #94a3b8;
+        font-size: 0.7rem;
+        display: block;
+    }
+    
+    /* Price */
+    .price {
+        font-weight: 500;
+        color: #334155;
+        font-size: 0.95rem;
+    }
+    
+    /* SKU Badge */
+    .sku-badge {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.2rem 0.6rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+    
+    /* Action Dropdown */
+    .btn-action {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        color: #64748b;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+        color: #334155;
+    }
+    
+    .btn-action i {
+        font-size: 1.1rem;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        padding: 0.5rem;
+    }
+    
+    .dropdown-item {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        color: #4a5568;
+        border-radius: 10px;
+    }
+    
+    .dropdown-item i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+        width: 1.2rem;
+    }
+    
+    .dropdown-item:hover {
+        background: #f1f5f9;
+    }
+    
+    .dropdown-item.text-danger:hover {
+        background: #fee9e9;
+    }
+    
+    /* Modal */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 24px 24px 0 0;
+        border-bottom: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+    
+    .modal-body {
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .btn-light {
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+        font-weight: 500;
+    }
+    
+    .btn-light:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    .btn-danger {
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        background: #dc2626;
+        border: none;
+        font-weight: 500;
+    }
+    
+    .btn-danger:hover {
+        background: #b91c1c;
+    }
+    
+    /* Checkbox */
+    .form-check-input {
+        width: 1.1rem;
+        height: 1.1rem;
+        border: 2px solid #cbd5e0;
+        cursor: pointer;
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h5 {
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-header-custom {
+            padding: 1.5rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-wrapper {
+            max-width: 100%;
+        }
+        
+        .tabs-wrapper {
+            padding: 0 1.5rem;
+            overflow-x: auto;
+        }
+        
+        .nav-tabs-custom {
+            flex-wrap: nowrap;
+            min-width: max-content;
+        }
+        
+        .table-wrapper {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        
+        .low-stock-alert {
+            margin: 1rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Products</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Products</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+            
+            <!-- Low Stock Alert Banner -->
+            {% if low_stock_count and low_stock_count > 0 %}
+            <div class="low-stock-alert" onclick="window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                <div class="alert-content">
+                    <i class="ri-alert-line"></i>
+                    <span>
+                        <strong>Low Stock Alert!</strong>
+                        {{ low_stock_count }} product(s) have stock ≤5 units
+                    </span>
+                    <span class="alert-badge">{{ low_stock_count }}</span>
+                </div>
+                <div class="alert-hover-text">
+                    <i class="ri-arrow-right-line"></i> Click to manage stock
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12">
+                    <!-- Single Card -->
+                    <div class="main-card card">
+                        <!-- Card Header with Search and Add -->
+                        <div class="card-header-custom">
+                            <h5>
+                                <i class="ri-shopping-bag-3-line"></i>
+                                Product Management
+                            </h5>
+                            <div class="search-wrapper">
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" class="form-control" id="searchProductList" 
+                                           placeholder="Search products...">
+                                </div>
+                            </div>
+                            <a href="{{ url_for('products.add_product') }}" class="btn-add">
+                                <i class="ri-add-line"></i>
+                                Add Product
+                            </a>
+                        </div>
+
+                        <!-- Tabs - FIXED: Better visibility -->
+                        <div class="tabs-wrapper">
+                            <ul class="nav nav-tabs-custom" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active product-tab" data-status="all" href="javascript:void(0);">
+                                         <h5 class="mb-sm-0">All</h5><span class="badge" id="all-count"> {{ products|length }}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link product-tab" data-status="Published" href="javascript:void(0);">
+                                        <h5 class="mb-sm-0">Published </h5><span class="badge" id="published-count">{{ products|selectattr('status', 'equalto', 'Published')|list|length }}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link product-tab" data-status="Draft" href="javascript:void(0);">
+                                      <h5 class="mb-sm-0">  Draft </h5> <span class="badge" id="draft-count">{{ products|selectattr('status', 'equalto', 'Draft')|list|length }}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-wrapper">
+                            {% if products %}
+                            <div class="table-responsive">
+                                <div id="productTable">
+                                    <table class="table table-products">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Stock</th>
+                                                <th>Avg Purchase</th>
+                                                <th>Suggested</th>
+                                                <th>Est. Profit</th>
+                                                <th>Sold</th>
+                                                <th>Status</th>
+                                                <th style="width: 60px;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="list">
+                                            {% for product in products %}
+                                            <tr>
+                                                <!-- Product -->
+                                                <td class="product_name">
+                                                    <div class="product-info">
+                                                        {% if product.image %}
+                                                            <img src="{{ url_for('static', filename='uploads/' + product.image) }}" 
+                                                                alt="{{ product.title }}"
+                                                                class="product-image">
+                                                        {% else %}
+                                                            <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                                                <i class="ri-image-line text-muted"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div class="product-details">
+                                                            <h6>{{ product.title }}</h6>
+                                                            <small>{{ product.category or 'Uncategorized' }}</small>
+                                                            {% if product.sku %}
+                                                            <small class="sku-badge">SKU: {{ product.sku }}</small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <!-- Stock -->
+                                                <td class="stock">
+                                                    {% set current_stock = product.current_stock %}
+                                                    {% if current_stock <= product.low_stock_threshold and current_stock > 0 %}
+                                                        <span class="badge-stock warning">{{ current_stock }} left</span>
+                                                    {% elif current_stock == 0 %}
+                                                        <span class="badge-stock danger">Out</span>
+                                                    {% else %}
+                                                        <span class="badge-stock success">{{ current_stock }}</span>
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Avg Purchase Price -->
+                                                <td class="avg_price price">
+                                                    {% set avg_price = product.avg_purchase_price %}
+                                                    {% if avg_price > 0 %}
+                                                        ₹{{ "%.2f"|format(avg_price) }}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Suggested Price -->
+                                                <td class="suggested_price price">
+                                                    ₹{{ "%.2f"|format(product.suggested_selling_price or 0) }}
+                                                </td>
+
+                                                <!-- Estimated Profit -->
+                                                <td class="profit">
+                                                    {% set avg_price = product.avg_purchase_price %}
+                                                    {% set profit = (product.suggested_selling_price or 0) - avg_price %}
+                                                    {% if avg_price > 0 %}
+                                                        {% if profit > 0 %}
+                                                            <span class="profit-positive">₹{{ "%.2f"|format(profit) }}</span>
+                                                            <span class="profit-percent">{{ "%.1f"|format((profit / avg_price * 100)) }}%</span>
+                                                        {% elif profit < 0 %}
+                                                            <span class="profit-negative">-₹{{ "%.2f"|format(profit|abs) }}</span>
+                                                            <span class="profit-percent">Loss</span>
+                                                        {% else %}
+                                                            <span class="profit-neutral">₹0.00</span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="profit-neutral">—</span>
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Sold Quantity -->
+                                                <td class="orders price">{{ product.total_sold }}</td>
+
+                                                <!-- Status - FIXED: Better text visibility -->
+                                                <td class="status" data-status="{{ product.status }}">
+                                                    {% if product.status == 'Published' %}
+                                                        <span class="badge-status published">Published</span>
+                                                    {% else %}
+                                                        <span class="badge-status draft">Draft</span>
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Actions -->
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn-action" type="button" 
+                                                                data-bs-toggle="dropdown">
+                                                            <i class="ri-more-2-fill"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li>
+                                                                <a class="dropdown-item" 
+                                                                   href="{{ url_for('products.product_details', id=product.id) }}">
+                                                                    <i class="ri-eye-line text-info"></i>
+                                                                    View Details
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item" 
+                                                                   href="{{ url_for('products.edit_product', id=product.id) }}">
+                                                                    <i class="ri-pencil-line text-warning"></i>
+                                                                    Edit
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <button class="dropdown-item text-danger delete-btn" 
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#deleteProductModal"
+                                                                        data-product-id="{{ product.id }}"
+                                                                        data-product-name="{{ product.title }}">
+                                                                    <i class="ri-delete-bin-line"></i>
+                                                                    Delete
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <i class="ri-shopping-bag-3-line"></i>
+                                <h5>No Products Found</h5>
+                                <p class="text-muted">Click "Add Product" to create your first product</p>
+                                <a href="{{ url_for('products.add_product') }}" class="btn-add">
+                                    <i class="ri-add-line"></i>
+                                    Add Product
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-delete-bin-line me-2"></i>
+                    Delete Product
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                          colors="primary:#f7b84b,secondary:#f06548" style="width:80px;height:80px"></lord-icon>
+                <h5 class="mt-3">Are you sure?</h5>
+                <p class="text-muted">Product <strong id="deleteProductName"></strong> will be permanently deleted. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="deleteProductForm">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Product</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Lordicon -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // ===== DELETE FUNCTIONALITY =====
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteForm = document.getElementById('deleteProductForm');
+    const deleteProductName = document.getElementById('deleteProductName');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.getAttribute('data-product-name');
+            deleteForm.action = "{{ url_for('products.delete_product', id=0) }}".replace('0', productId);
+            if (deleteProductName) {
+                deleteProductName.textContent = productName;
+            }
+        });
+    });
+
+    // ===== SIMPLE FILTERING (without List.js) =====
+    const searchInput = document.getElementById('searchProductList');
+    const productRows = document.querySelectorAll('#productTable tbody tr');
+    const allTab = document.querySelector('.product-tab[data-status="all"]');
+    const publishedTab = document.querySelector('.product-tab[data-status="Published"]');
+    const draftTab = document.querySelector('.product-tab[data-status="Draft"]');
+    
+    let currentFilter = 'all';
+    let searchTerm = '';
+
+    // Function to filter rows
+    function filterRows() {
+        let visibleCount = 0;
+        let publishedCount = 0;
+        let draftCount = 0;
+        
+        productRows.forEach(row => {
+            // Get status from the badge text
+            const statusBadge = row.querySelector('.badge-status');
+            const status = statusBadge ? statusBadge.textContent.trim() : '';
+            
+            // Get searchable text
+            const productName = row.querySelector('.product_name h6')?.textContent.toLowerCase() || '';
+            const sku = row.querySelector('.sku-badge')?.textContent.toLowerCase() || '';
+            const category = row.querySelector('.product-details small')?.textContent.toLowerCase() || '';
+            
+            // Check status filter
+            const statusMatch = currentFilter === 'all' || status === currentFilter;
+            
+            // Check search filter
+            const searchMatch = searchTerm === '' || 
+                              productName.includes(searchTerm) || 
+                              sku.includes(searchTerm) ||
+                              category.includes(searchTerm);
+            
+            // Show/hide row
+            if (statusMatch && searchMatch) {
+                row.style.display = '';
+                visibleCount++;
+                if (status === 'Published') publishedCount++;
+                if (status === 'Draft') draftCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Update counts
+        document.getElementById('all-count').textContent = visibleCount;
+        document.getElementById('published-count').textContent = publishedCount;
+        document.getElementById('draft-count').textContent = draftCount;
+    }
+
+    // Tab click events
+    if (allTab) {
+        allTab.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.product-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = 'all';
+            filterRows();
+        });
+    }
+
+    if (publishedTab) {
+        publishedTab.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.product-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = 'Published';
+            filterRows();
+        });
+    }
+
+    if (draftTab) {
+        draftTab.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.product-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = 'Draft';
+            filterRows();
+        });
+    }
+
+    // Search input event
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            searchTerm = this.value.toLowerCase().trim();
+            filterRows();
+        });
+    }
+
+    // Initialize counts
+    filterRows();
+
+    // Low stock alert handler
+    const lowStockAlert = document.querySelector('.low-stock-alert');
+    if (lowStockAlert) {
+        lowStockAlert.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (allTab) allTab.click();
+            if (searchInput) searchInput.value = '';
+        });
+    }
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

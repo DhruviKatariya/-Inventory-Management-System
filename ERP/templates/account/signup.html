@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Your App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Same bubble & card styles as login, with small adjustments for signup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #0a1929 0%, #2d5788  100%);
+            position: relative;
+            overflow-x: hidden;
+            padding: 1rem;
+        }
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(2px);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.3), 0 15px 25px rgba(0, 0, 0, 0.1);
+            animation: float 8s infinite ease-in-out;
+            z-index: 0;
+        }
+        .bubble1 {
+            width: 250px;
+            height: 250px;
+            top: -50px;
+            left: -80px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.05));
+            animation-duration: 12s;
+        }
+        .bubble2 {
+            width: 350px;
+            height: 350px;
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle at 70% 30%, rgba(255, 215, 245, 0.3), rgba(255, 255, 255, 0.02));
+            animation-duration: 16s;
+            animation-delay: -3s;
+        }
+        .bubble3 {
+            width: 180px;
+            height: 180px;
+            top: 40%;
+            right: 15%;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 220, 240, 0.4), rgba(255, 255, 255, 0.03));
+            animation-duration: 10s;
+            animation-delay: -1s;
+        }
+        .bubble4 {
+            width: 220px;
+            height: 220px;
+            bottom: 15%;
+            left: 5%;
+            background: radial-gradient(circle at 40% 60%, rgba(255, 200, 230, 0.35), rgba(255, 255, 255, 0.02));
+            animation-duration: 14s;
+        }
+        .bubble5 {
+            width: 120px;
+            height: 120px;
+            top: 20%;
+            left: 20%;
+            background: radial-gradient(circle at 60% 20%, rgba(255, 240, 250, 0.5), rgba(255, 255, 255, 0.05));
+            animation-duration: 7s;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(3deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 520px;
+            z-index: 10;
+            position: relative;
+        }
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            padding: 2.5rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.25s ease;
+        }
+        .auth-card:hover {
+            transform: translateY(-6px);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .auth-header h3 {
+            font-weight: 700;
+            color: #0a2644;
+            margin-bottom: 0.5rem;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+        }
+        .auth-header p {
+            color: #396f87;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1e485c;
+            font-size: 0.9rem;
+            letter-spacing: 0.2px;
+        }
+        .form-group label i {
+            color: #5eade5;
+            width: 22px;
+            margin-right: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            border: 2px solid #c2d7f0;
+            border-radius: 30px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .form-control:focus {
+            border-color: #5eaae5;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(165, 94, 229, 0.15);
+            outline: none;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        @media (max-width: 576px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+        .btn-signup {
+            background: linear-gradient(135deg, #667eea 0%, #574ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(63, 121, 179, 0.4);
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+        .btn-signup:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 30px rgba(63, 111, 179, 0.5);
+            background: linear-gradient(135deg, #4078bb 0%, #6e4ac9 100%);
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #5a3c74;
+            font-weight: 500;
+        }
+        .auth-footer a {
+            color: #3d84a3;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            color: #8094b3;
+            margin: 1.8rem 0;
+        }
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #c2d7f0;
+        }
+        .divider span {
+            padding: 0 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .social-btn {
+            background: white;
+            border: 2px solid #c2d8f0;
+            border-radius: 40px;
+            padding: 0.7rem 1.5rem;
+            color: #265570;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .social-btn:hover {
+            background: #f3e9ff;
+            border-color: #88afe0;
+        }
+        .alert {
+            border-radius: 30px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.8rem;
+            border: none;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .alert-success {
+            background: #d4ecfa;
+            color: #133e61;
+        }
+        .alert-danger {
+            background: #ffdede;
+            color: #a12b2b;
+        }
+        .alert i {
+            margin-right: 8px;
+        }
+        .password-hint {
+            font-size: 0.8rem;
+            color: #5880a0;
+            margin-top: 0.3rem;
+            padding-left: 0.5rem;
+            font-weight: 500;
+        }
+        .password-hint i {
+            color: #5eade5;
+            font-size: 0.6rem;
+            margin-right: 0.3rem;
+        }
+        .terms {
+            font-size: 0.9rem;
+        }
+        .terms a {
+            color: #3f7bb3;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .terms a:hover {
+            text-decoration: underline;
+        }
+        /* No logo */
+    </style>
+</head>
+<body>
+    <!-- 3D Bubbles -->
+    <div class="bubble bubble1"></div>
+    <div class="bubble bubble2"></div>
+    <div class="bubble bubble3"></div>
+    <div class="bubble bubble4"></div>
+    <div class="bubble bubble5"></div>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h3>Create account</h3>
+                
+            </div>
+
+            
+
+            <form method="POST" action="{{ url_for('account.signup_post') }}" onsubmit="return validateForm()">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full Name (optional)</label>
+                    <input type="text" class="form-control" name="full_name" placeholder="John Doe">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email *</label>
+                        <input type="email" class="form-control" name="email" placeholder="name@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-at"></i> Username *</label>
+                        <input type="text" class="form-control" name="username" placeholder="johndoe123" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password *</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                   <!-- <div class="password-hint">
+                        <i class="fas fa-circle"></i> At least 6 characters
+                    </div>-->
+                </div>
+             <!--   <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirm Password *</label>
+                    <input type="password" class="form-control" id="confirm_password" placeholder="••••••••" required>
+                </div>-->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label terms" for="terms">
+                        I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                <button type="submit" class="btn-signup">Create Account</button>
+            </form>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            
+
+            <div class="auth-footer">
+                Already have an account? <a href="{{ url_for('account.login') }}">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+  <!--  <script>
+        function validateForm() {
+            var password = document.getElementById('password').value;
+            var confirm = document.getElementById('confirm_password').value;
+            if (password !== confirm) {
+                alert('Passwords do not match!');
+                return false;
+            }
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long.');
+                return false;
+            }
+            return true;
+        }
+    </script>-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

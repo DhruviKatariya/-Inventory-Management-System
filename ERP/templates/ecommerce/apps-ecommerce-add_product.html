@@ -1,0 +1,651 @@
+{% extends "partials/base.html" %}
+{% block title %}{% if product %}Update{% else %}Create{% endif %} Product{% endblock title %}
+
+{% block extra_css %}
+<!-- flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* Main Card Styling */
+    .product-card {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .product-card:hover {
+        box-shadow: 0 30px 80px rgba(102, 126, 234, 0.12);
+    }
+    
+    /* Card Header with Gradient */
+    .card-header-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 2.5rem;
+        border-bottom: none;
+    }
+    
+    .card-header-gradient h3 {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+    
+    .card-header-gradient p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+    
+    /* Card Body */
+    .card-body-custom {
+        padding: 2.5rem;
+        background: white;
+    }
+    
+    /* Section Titles */
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .section-title .icon-wrapper {
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.4rem;
+    }
+    
+    .section-title h5 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .section-title small {
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+    
+    /* Form Controls */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.6rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-label i {
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .form-control:hover, .form-select:hover {
+        border-color: #94a3b8;
+    }
+    
+    .input-group-text {
+        border: 2px solid #e2e8f0;
+        border-radius: 16px 0 0 16px;
+        background: #f8fafc;
+        font-weight: 600;
+        color: #475569;
+        padding: 0.8rem 1.2rem;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+        border-radius: 0 16px 16px 0;
+    }
+    
+    /* Image Upload Area */
+    .image-upload-area {
+        background: #f8fafc;
+        border: 2px dashed #e2e8f0;
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 2rem;
+    }
+    
+    .image-upload-area:hover {
+        border-color: #667eea;
+        background: #f1f5f9;
+    }
+    
+    .image-upload-area .upload-icon {
+        width: 60px;
+        height: 60px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.8rem;
+        color: #667eea;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+    }
+    
+    .image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 16px;
+        margin-top: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+    
+    .image-preview.show {
+        display: block;
+    }
+    
+    /* Info Cards */
+    .info-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
+        margin-top: 1rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .info-card .label {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-card .value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    
+    /* Row Spacing */
+    .row-custom {
+        margin-bottom: 2rem;
+    }
+    
+    /* Submit Button */
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 1rem 3rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        min-width: 200px;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-submit i {
+        margin-right: 0.5rem;
+    }
+    
+    /* Helper Text */
+    .text-helper {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        display: block;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-header-gradient {
+            padding: 1.5rem;
+        }
+        
+        .card-body-custom {
+            padding: 1.5rem;
+        }
+        
+        .btn-submit {
+            width: 100%;
+        }
+    }
+
+    /* Stock Info Badge */
+    .stock-badge {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+
+    .stock-badge i {
+        color: #0284c7;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">
+                            <i class="{% if product %}ri-edit-box-line{% else %}ri-add-circle-line{% endif %} me-2"></i>
+                            {% if product %}Update Product{% else %}Create New Product{% endif %}
+                        </h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('products.product_list') }}">Products</a></li>
+                                <li class="breadcrumb-item active">{% if product %}Edit{% else %}Create{% endif %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Product Info Badge (for edit mode) -->
+            {% if product %}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end">
+                        <span class="stock-badge">
+                            <i class="ri-barcode-line"></i> SKU: {{ product.sku }}
+                        </span>
+                        <span class="stock-badge ms-2">
+                            <i class="ri-stack-line"></i> Current Stock: {{ product.get_current_stock() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="product-card">
+                        <!-- Card Header -->
+                        <div class="card-header-gradient">
+                            <h3>
+                                <i class="{% if product %}ri-edit-box-line{% else %}ri-add-circle-line{% endif %} me-2"></i>
+                                {% if product %}Update Product{% else %}Create New Product{% endif %}
+                            </h3>
+                            <p>
+                                {% if product %}
+                                    Update the product details below. Changes will be reflected immediately.
+                                    {% if product.get_current_stock() == 0 %}
+                                    <span class="badge bg-warning text-dark ms-2">Stock: 0 - Add purchases to increase stock</span>
+                                    {% endif %}
+                                {% else %}
+                                    Add a new product to your inventory. Fill in the basic information below.
+                                    <span class="badge bg-info text-white ms-2">Stock starts at 0</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body-custom">
+                            <form id="createproduct-form"
+                                method="POST"
+                                action="{% if product %}{{ url_for('products.update_product', id=product.id) }}{% else %}{{ url_for('products.add_product') }}{% endif %}"
+                                enctype="multipart/form-data">
+
+                                <!-- Basic Information Section -->
+                                <div class="section-title">
+                                    <div class="icon-wrapper">
+                                        <i class="ri-information-line"></i>
+                                    </div>
+                                    <div>
+                                        <h5>Basic Information</h5>
+                                        <small>Product title and description</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-font-size"></i>
+                                                Product Title <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text"
+                                                class="form-control"
+                                                name="title"
+                                                value="{{ product.title if product else '' }}"
+                                                placeholder="e.g., Apple MacBook Pro 2024"
+                                                required>
+                                            <small class="text-helper">Use a descriptive title that clearly identifies the product</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-file-text-line"></i>
+                                                Product Description
+                                            </label>
+                                            <textarea name="description" id="product-description" rows="5" 
+                                                      class="form-control" 
+                                                      placeholder="Describe your product in detail...">{{ product.description if product else '' }}</textarea>
+                                            <small class="text-helper">Include key features, specifications, and benefits</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Product Images Section -->
+                                <div class="section-title mt-5">
+                                    <div class="icon-wrapper">
+                                        <i class="ri-image-line"></i>
+                                    </div>
+                                    <div>
+                                        <h5>Product Image</h5>
+                                        <small>Upload product photo</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="image-upload-area" onclick="document.getElementById('product-image-input').click()">
+                                            <div class="upload-icon">
+                                                <i class="ri-camera-line"></i>
+                                            </div>
+                                            <h6>Click to upload product image</h6>
+                                            <p class="text-muted small mb-3">PNG, JPG or JPEG (Max 5MB)</p>
+                                            <input type="file" id="product-image-input" 
+                                                   accept="image/png, image/jpeg, image/jpg" 
+                                                   name="image" style="display: none;">
+                                            <img id="product-img-preview" 
+                                                 src="{% if product and product.image %}
+                                                     {{ url_for('static', filename='uploads/' + product.image) }}
+                                                     {% endif %}" 
+                                                 class="image-preview {% if product and product.image %}show{% endif %}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Product Settings Section -->
+                                <div class="section-title mt-5">
+                                    <div class="icon-wrapper">
+                                        <i class="ri-settings-3-line"></i>
+                                    </div>
+                                    <div>
+                                        <h5>Product Settings</h5>
+                                        <small>Category, price, and status</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-price-tag-3-line"></i>
+                                                Category
+                                            </label>
+                                            <input type="text" class="form-control" name="category" 
+                                                   value="{{ product.category if product else '' }}" 
+                                                   placeholder="e.g., Electronics, Clothing, Books">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-money-rupee-circle-line"></i>
+                                                Suggested Selling Price
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" step="0.01" class="form-control" 
+                                                       name="suggested_selling_price" 
+                                                       value="{{ product.suggested_selling_price if product else '' }}" 
+                                                       placeholder="0.00">
+                                            </div>
+                                            <small class="text-helper">Recommended retail price (MRP)</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-checkbox-circle-line"></i>
+                                                Status
+                                            </label>
+                                            <select class="form-select" name="status">
+                                                <option value="Published" {% if product and product.status == 'Published' %}selected{% endif %}>Published</option>
+                                                <option value="Draft" {% if product and product.status == 'Draft' %}selected{% endif %}>Draft</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-alert-line"></i>
+                                                Low Stock Threshold
+                                            </label>
+                                            <input type="number" class="form-control" name="low_stock_threshold"
+                                                   value="{{ product.low_stock_threshold if product else '5' }}"
+                                                   placeholder="Alert when stock below" min="1">
+                                            <small class="text-helper">Get alert when stock reaches this number</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-calendar-line"></i>
+                                                Publish Date
+                                            </label>
+                                            <input type="text" id="published_date" name="published_date" class="form-control" 
+                                                   placeholder="Select publish date"
+                                                   value="{{ product.published_date.strftime('%Y-%m-%d') if product and product.published_date else '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Manufacturer Information -->
+                                <div class="section-title mt-5">
+                                    <div class="icon-wrapper">
+                                        <i class="ri-building-line"></i>
+                                    </div>
+                                    <div>
+                                        <h5>Manufacturer Information</h5>
+                                        <small>Optional manufacturer details</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-building-2-line"></i>
+                                                Manufacturer Name
+                                            </label>
+                                            <input type="text" class="form-control" name="manufacturer_name" 
+                                                   value="{{ product.manufacturer_name if product else '' }}" 
+                                                   placeholder="Enter manufacturer name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">
+                                                <i class="ri-trademark-line"></i>
+                                                Manufacturer Brand
+                                            </label>
+                                            <input type="text" class="form-control" name="manufacturer_brand" 
+                                                   value="{{ product.manufacturer_brand if product else '' }}" 
+                                                   placeholder="Enter brand name">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="row mt-5">
+                                    <div class="col-12 text-center">
+                                        <a href="{{ url_for('products.product_list') }}" class="btn btn-light btn-lg px-5 me-3">
+                                            <i class="ri-close-line me-2"></i>Cancel
+                                        </a>
+                                        <button type="submit" class="btn-submit btn-lg">
+                                            <i class="{% if product %}ri-save-3-line{% else %}ri-add-line{% endif %} me-2"></i>
+                                            {% if product %}Update Product{% else %}Create Product{% endif %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- ckeditor -->
+<script src="{{url_for('static' ,filename='libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js')}}"></script>
+<!-- flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Initialize CKEditor for description
+    if (document.querySelector('#product-description')) {
+        ClassicEditor
+            .create(document.querySelector('#product-description'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote'],
+                placeholder: 'Describe your product in detail...'
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+    
+    // Initialize flatpickr for date picker - FIXED date format to match backend
+    flatpickr("#published_date", {
+        enableTime: false,
+        dateFormat: "Y-m-d",  // Changed to match backend format
+        altInput: true,
+        altFormat: "F j, Y",
+        allowInput: true
+    });
+    
+    // Image preview functionality
+    const imageInput = document.getElementById('product-image-input');
+    const imagePreview = document.getElementById('product-img-preview');
+    
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
+                alert('Please upload a valid image file (PNG, JPG, JPEG)');
+                imageInput.value = '';
+                return;
+            }
+            
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                imageInput.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.classList.add('show');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Form validation
+    const form = document.getElementById('createproduct-form');
+    form.addEventListener('submit', function(e) {
+        const title = document.querySelector('input[name="title"]').value.trim();
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a product title');
+            return false;
+        }
+        
+        // Validate price
+        const price = document.querySelector('input[name="suggested_selling_price"]').value;
+        if (price && parseFloat(price) < 0) {
+            e.preventDefault();
+            alert('Price cannot be negative');
+            return false;
+        }
+        
+        // Validate threshold
+        const threshold = document.querySelector('input[name="low_stock_threshold"]').value;
+        if (threshold && parseInt(threshold) < 1) {
+            e.preventDefault();
+            alert('Low stock threshold must be at least 1');
+            return false;
+        }
+    });
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

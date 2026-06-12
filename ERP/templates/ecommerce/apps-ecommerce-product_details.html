@@ -1,0 +1,998 @@
+{% extends "partials/base.html" %}
+{% block title %}{{ product.title }} - Product Details{% endblock title %}
+
+{% block extra_css %}
+<!--Swiper slider css-->
+<link href="{{url_for('static' ,filename='libs/swiper/swiper-bundle.min.css')}}" rel="stylesheet" type="text/css" />
+<style>
+    /* Main Card Styling */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header */
+    .card-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+    }
+    
+    .card-header-custom h4 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .card-header-custom p {
+        margin-bottom: 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+    
+    /* Stats Cards */
+    .stats-row {
+        padding: 1.5rem 2rem 0.5rem 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        border: 1px solid #eef2f6;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .stat-card:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .stat-card.warning {
+        background: #fff8e7;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .stat-card.danger {
+        background: #fee9e9;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .stat-card.success {
+        background: #e6f7e6;
+        border-left: 4px solid #10b981;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #667eea;
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stat-content h6 {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-content h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    
+    .stat-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .stat-badge.warning {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .stat-badge.danger {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .stat-badge.success {
+        background: #10b981;
+        color: white;
+    }
+    
+    /* Product Image */
+    .product-image-container {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid #eef2f6;
+    }
+    
+    .product-image {
+        max-height: 300px;
+        object-fit: contain;
+        border-radius: 16px;
+    }
+    
+    .product-placeholder {
+        width: 100%;
+        height: 300px;
+        background: #f1f5f9;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 3rem;
+    }
+    
+    /* Product Info */
+    .product-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-sku {
+        color: #64748b;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: #f1f5f9;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+    }
+    
+    .product-sku i {
+        color: #667eea;
+    }
+    
+    .product-category {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .product-status {
+        display: inline-block;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .product-status.published {
+        background: #e6f7e6;
+        color: #0a7e0a;
+    }
+    
+    .product-status.draft {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    
+    /* Price Cards */
+    .price-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    
+    .price-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .price-label {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .price-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    
+    .price-value.suggested {
+        color: #667eea;
+    }
+    
+    .price-value.avg {
+        color: #f59e0b;
+    }
+    
+    .profit-badge {
+        background: #e6f7e6;
+        color: #0a7e0a;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 600;
+    }
+    
+    .profit-badge.negative {
+        background: #fee9e9;
+        color: #b91c1c;
+    }
+    
+    .profit-percent {
+        background: rgba(255,255,255,0.5);
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+    }
+    
+    /* Description - FIXED: Show HTML properly */
+    .description-box {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #eef2f6;
+    }
+    
+    .description-box p {
+        color: #334155;
+        line-height: 1.7;
+        margin-bottom: 0.5rem;
+    }
+    
+    .description-box ul, 
+    .description-box ol {
+        color: #334155;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .description-box li {
+        color: #334155;
+        margin-bottom: 0.2rem;
+    }
+    
+    .description-box h1, 
+    .description-box h2, 
+    .description-box h3, 
+    .description-box h4, 
+    .description-box h5, 
+    .description-box h6 {
+        color: #1e293b;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .description-box a {
+        color: #667eea;
+        text-decoration: none;
+    }
+    
+    .description-box a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Tabs */
+    .nav-tabs-custom {
+        background: #f8fafc;
+        border-radius: 50px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .nav-tabs-custom .nav-link {
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        color: #64748b;
+        font-weight: 500;
+        border: none;
+        transition: all 0.2s ease;
+        background: transparent;
+    }
+    
+    .nav-tabs-custom .nav-link:hover {
+        color: #334155;
+        background: rgba(0,0,0,0.02);
+    }
+    
+    .nav-tabs-custom .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .nav-tabs-custom .nav-link i {
+        margin-right: 0.5rem;
+    }
+    
+    /* Tables - FIXED: Better text visibility */
+    .table-custom {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    
+    .table-custom thead th {
+        background: #f1f5f9;
+        padding: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-radius: 12px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .table-custom tbody tr {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        transition: all 0.2s ease;
+        border: 1px solid #eef2f6;
+    }
+    
+    .table-custom tbody tr:hover {
+        background: #f8fafc;
+        border-color: #d1d5db;
+        transform: translateY(-1px);
+    }
+    
+    .table-custom tbody td {
+        padding: 1rem;
+        border: none;
+        vertical-align: middle;
+        color: #1e293b;
+        font-weight: 400;
+    }
+    
+    .stock-change-positive {
+        color: #10b981;
+        font-weight: 600;
+    }
+    
+    .stock-change-negative {
+        color: #ef4444;
+        font-weight: 600;
+    }
+    
+    .text-primary {
+        color: #667eea !important;
+        font-weight: 600;
+    }
+    
+    .fw-bold {
+        font-weight: 700 !important;
+        color: #1e293b;
+    }
+    
+    /* Timeline - FIXED: Better visibility */
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+        color: #1e293b;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.3rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+        z-index: 2;
+    }
+    
+    .timeline-item.purchase:before {
+        background: #10b981;
+        box-shadow: 0 0 0 2px #10b981;
+    }
+    
+    .timeline-item.sale:before {
+        background: #f59e0b;
+        box-shadow: 0 0 0 2px #f59e0b;
+    }
+    
+    .timeline-item:after {
+        content: '';
+        position: absolute;
+        left: -1.1rem;
+        top: 1rem;
+        bottom: -0.5rem;
+        width: 2px;
+        background: #e2e8f0;
+        z-index: 1;
+    }
+    
+    .timeline-item:last-child:after {
+        display: none;
+    }
+    
+    .timeline-date {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 0.2rem;
+    }
+    
+    .timeline-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+    }
+    
+    .timeline-text {
+        color: #475569;
+        font-size: 0.9rem;
+    }
+    
+    .timeline-stock {
+        font-weight: 600;
+        font-size: 1rem;
+        color: #1e293b;
+        background: #f1f5f9;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+    }
+    
+    .timeline-reference {
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    /* Seller Alert */
+    .seller-alert {
+        background: #f0f9ff;
+        border-left: 4px solid #667eea;
+        border-radius: 12px;
+        padding: 1rem;
+        color: #1e293b;
+    }
+    
+    .seller-alert i {
+        color: #667eea;
+    }
+    
+    .seller-alert strong {
+        color: #1e293b;
+    }
+    
+    .seller-badge {
+        background: #667eea;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding: 0 2rem 2rem;
+    }
+    
+    .btn-action {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border: none;
+    }
+    
+    .btn-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        color: white;
+    }
+    
+    .btn-back {
+        background: #f1f5f9;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .btn-back:hover {
+        background: #e2e8f0;
+        transform: translateY(-2px);
+        color: #1e293b;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">{{ product.title }}</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('products.product_list') }}">Products</a></li>
+                                <li class="breadcrumb-item active">Product Details</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Statistics Cards -->
+            <div class="stats-row">
+                <div class="stat-card" onclick="window.location.href='{{ url_for('purchases.purchase_list') }}?product_id={{ product.id }}'">
+                    <div class="stat-icon">
+                        <i class="ri-stack-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Current Stock</h6>
+                        <h3>{{ current_stock }}</h3>
+                    </div>
+                    {% if current_stock <= product.low_stock_threshold and current_stock > 0 %}
+                    <span class="stat-badge warning">Low Stock</span>
+                    {% elif current_stock == 0 %}
+                    <span class="stat-badge danger">Out of Stock</span>
+                    {% endif %}
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="ri-add-circle-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Total Purchased</h6>
+                        <h3>{{ total_purchased }}</h3>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="ri-subtract-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Total Sold</h6>
+                        <h3>{{ total_sold }}</h3>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="ri-money-rupee-circle-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Avg Purchase Price</h6>
+                        <h3>₹{{ "{:,.0f}".format(avg_purchase_price) }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Card -->
+            <div class="main-card">
+                <!-- Card Header -->
+                <div class="card-header-custom">
+                    <h4>
+                        <i class="ri-capsule-line"></i>
+                        Product Details
+                    </h4>
+                    <p>
+                        <i class="ri-information-line"></i>
+                        Complete information about {{ product.title }}
+                    </p>
+                </div>
+
+                <!-- Product Information -->
+                <div class="row p-4">
+                    <!-- Left Column - Image -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="product-image-container">
+                            {% if product.image %}
+                                <img src="{{ url_for('static', filename='uploads/' + product.image) }}" 
+                                    alt="{{ product.title }}"
+                                    class="product-image img-fluid">
+                            {% else %}
+                                <div class="product-placeholder">
+                                    <i class="ri-image-line"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Quick Info -->
+                        <div class="mt-4">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="product-sku">
+                                    <i class="ri-barcode-line"></i> SKU: {{ product.sku or 'N/A' }}
+                                </span>
+                                {% if product.category %}
+                                <span class="product-category">
+                                    <i class="ri-price-tag-3-line"></i> {{ product.category }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="product-status {{ product.status.lower() }}">
+                                    <i class="ri-{{ 'check-line' if product.status == 'Published' else 'draft-line' }}"></i>
+                                    {{ product.status or 'Draft' }}
+                                </span>
+                            </div>
+                            
+                            {% if sellers %}
+                            <div class="seller-alert d-flex align-items-center mb-3">
+                                <i class="ri-store-2-line fs-18 me-3"></i>
+                                <div>
+                                    <strong>Sellers:</strong><br>
+                                    {% for seller in sellers %}
+                                        <span class="fw-medium">{{ seller.get_full_name() }}</span>{% if seller.company_name %} <span class="text-muted">({{ seller.company_name }})</span>{% endif %}
+                                        {% if seller.gst_number %}<span class="seller-badge ms-2">GST: {{ seller.gst_number }}</span>{% endif %}
+                                        {% if not loop.last %}<br>{% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Details -->
+                    <div class="col-lg-8">
+                        <h2 class="product-title">{{ product.title }}</h2>
+                        
+                        <!-- Price Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="price-card">
+                                    <div class="price-label">Suggested Price</div>
+                                    <div class="price-value suggested">₹{{ "{:,.2f}".format(product.suggested_selling_price or 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="price-card">
+                                    <div class="price-label">Avg Purchase Price</div>
+                                    <div class="price-value avg">₹{{ "{:,.2f}".format(avg_purchase_price) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="price-card">
+                                    <div class="price-label">Profit Margin</div>
+                                    {% set profit_margin = product.suggested_selling_price - avg_purchase_price %}
+                                    {% set profit_percent = (profit_margin / avg_purchase_price * 100) if avg_purchase_price > 0 else 0 %}
+                                    <div class="profit-badge {% if profit_margin < 0 %}negative{% endif %}">
+                                        <span>₹{{ "{:,.2f}".format(profit_margin) }}</span>
+                                        <span class="profit-percent">({{ "{:.1f}".format(profit_percent) }}%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manufacturer Info -->
+                        {% if product.manufacturer_name or product.manufacturer_brand %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded">
+                                    <small class="text-muted d-block">Manufacturer Name</small>
+                                    <strong class="text-dark">{{ product.manufacturer_name or 'N/A' }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded">
+                                    <small class="text-muted d-block">Brand</small>
+                                    <strong class="text-dark">{{ product.manufacturer_brand or 'N/A' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Description - FIXED: Using safe filter to render HTML -->
+                        <div class="description-box mb-4">
+                            <h6 class="mb-3">
+                                <i class="ri-file-text-line me-2"></i>Description
+                            </h6>
+                            {% if product.description %}
+                                <div>{{ product.description|safe }}</div>
+                            {% else %}
+                                <p class="text-muted">No description available.</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs-custom nav-justified" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#purchases">
+                                    <i class="ri-add-circle-line"></i><h4 class="mb-sm-0"> Purchases ({{ purchases|length }})</h4>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#orders">
+                                    <i class="ri-subtract-line"></i><h4 class="mb-sm-0">Orders ({{ orders|length }})</h4>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#timeline">
+                                    <i class="ri-history-line"></i> <h4 class="mb-sm-0">Stock Timeline</h4>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content mt-4">
+                            <!-- Purchases Tab -->
+                            <div class="tab-pane fade show active" id="purchases">
+                                {% if purchases %}
+                                <div class="table-responsive">
+                                    <table class="table-custom">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Purchase ID</th>
+                                                <th>Seller</th>
+                                                <th>Quantity</th>
+                                                <th>Price/Unit</th>
+                                                <th>Total Cost</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for purchase in purchases %}
+                                            <tr onclick="window.location.href='{{ url_for('purchases.edit_purchase', id=purchase.id) }}'" style="cursor: pointer;">
+                                                <td class="text-dark">{{ purchase.purchase_date.strftime('%d %b %Y') }}</td>
+                                                <td><span class="text-primary fw-semibold">{{ purchase.purchase_id }}</span></td>
+                                                <td>
+                                                    <span class="fw-medium text-dark">{{ purchase.seller.get_full_name() if purchase.seller else 'N/A' }}</span>
+                                                    {% if purchase.seller and purchase.seller.company_name %}
+                                                    <br><small class="text-muted">{{ purchase.seller.company_name }}</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td><span class="stock-change-positive">+{{ purchase.quantity }}</span></td>
+                                                <td class="text-dark">₹{{ "{:,.2f}".format(purchase.purchase_price) }}</td>
+                                                <td class="fw-bold text-dark">₹{{ "{:,.2f}".format(purchase.total_cost) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5">
+                                    <i class="ri-shopping-cart-2-line fs-48 text-muted"></i>
+                                    <h5 class="mt-3 text-dark">No Purchases Yet</h5>
+                                    <p class="text-muted">This product hasn't been purchased yet.</p>
+                                    <a href="{{ url_for('purchases.add_purchase') }}?product_id={{ product.id }}" class="btn btn-sm btn-success">
+                                        <i class="ri-add-line me-1"></i>Add Purchase
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Orders Tab -->
+                            <div class="tab-pane fade" id="orders">
+                                {% if orders %}
+                                <div class="table-responsive">
+                                    <table class="table-custom">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Quantity</th>
+                                                <th>Amount</th>
+                                                <th>Profit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order in orders %}
+                                            <tr onclick="window.location.href='{{ url_for('orders.order_details', id=order.id) }}'" style="cursor: pointer;">
+                                                <td class="text-dark">{{ order.order_date.strftime('%d %b %Y') }}</td>
+                                                <td><span class="text-primary fw-semibold">{{ order.order_id }}</span></td>
+                                                <td class="fw-medium text-dark">{{ order.customer_name }}</td>
+                                                <td><span class="stock-change-negative">-{{ order.get_total_quantity() }}</span></td>
+                                                <td class="text-dark">₹{{ "{:,.2f}".format(order.final_amount) }}</td>
+                                                <td class="fw-bold {% if order.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                    ₹{{ "{:,.2f}".format(order.profit or 0) }}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-5">
+                                    <i class="ri-shopping-bag-line fs-48 text-muted"></i>
+                                    <h5 class="mt-3 text-dark">No Orders Yet</h5>
+                                    <p class="text-muted">This product hasn't been ordered yet.</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Timeline Tab -->
+                            <div class="tab-pane fade" id="timeline">
+                                {% set combined = [] %}
+                                {% for purchase in purchases %}
+                                    {% set _ = combined.append({
+                                        'date': purchase.purchase_date,
+                                        'type': 'purchase',
+                                        'quantity': purchase.quantity,
+                                        'reference': purchase.purchase_id,
+                                        'party': purchase.seller.get_full_name() if purchase.seller else 'Unknown',
+                                        'price': purchase.purchase_price,
+                                        'total': purchase.total_cost
+                                    }) %}
+                                {% endfor %}
+                                
+                                {% for order in orders %}
+                                    {% set _ = combined.append({
+                                        'date': order.order_date,
+                                        'type': 'sale',
+                                        'quantity': -order.get_total_quantity(),
+                                        'reference': order.order_id,
+                                        'party': order.customer_name,
+                                        'price': order.final_amount,
+                                        'total': order.final_amount
+                                    }) %}
+                                {% endfor %}
+                                
+                                {% set sorted = combined|sort(attribute='date') %}
+                                
+                                {% if sorted %}
+                                    {% set ns = namespace(current=0) %}
+                                    <div class="timeline">
+                                        {% for event in sorted %}
+                                            {% set ns.current = ns.current + event.quantity %}
+                                            <div class="timeline-item {% if event.quantity > 0 %}purchase{% else %}sale{% endif %}">
+                                                <div class="timeline-date">{{ event.date.strftime('%d %b %Y %H:%M') }}</div>
+                                                <div class="timeline-title">
+                                                    {% if event.quantity > 0 %}
+                                                        <span class="stock-change-positive">+{{ event.quantity }}</span> units purchased
+                                                    {% else %}
+                                                        <span class="stock-change-negative">{{ event.quantity }}</span> units sold
+                                                    {% endif %}
+                                                </div>
+                                                <div class="timeline-text">
+                                                    {% if event.quantity > 0 %}
+                                                        from <span class="fw-medium">{{ event.party }}</span>
+                                                    {% else %}
+                                                        to <span class="fw-medium">{{ event.party }}</span>
+                                                    {% endif %}
+                                                    <br>
+                                                    <span class="timeline-reference">Ref: {{ event.reference }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <span class="text-dark">₹{{ "{:,.2f}".format(event.total) }}</span>
+                                                    <span class="timeline-stock">Stock: {{ ns.current }}</span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        
+                                        <div class="mt-4 p-3 bg-light rounded">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold text-dark">Current Stock:</span>
+                                                <span class="fw-bold text-primary fs-5">{{ current_stock }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="ri-history-line fs-48 text-muted"></i>
+                                        <h5 class="mt-3 text-dark">No Stock Movements</h5>
+                                        <p class="text-muted">No purchase or sale records found.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('products.edit_product', id=product.id) }}" class="btn-action btn-edit">
+                        <i class="ri-pencil-fill"></i> Edit Product
+                    </a>
+                    <a href="{{ url_for('products.product_list') }}" class="btn-action btn-back">
+                        <i class="ri-arrow-go-back-line"></i> Back to Products
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!--Swiper slider js-->
+<script src="{{url_for('static' ,filename='libs/swiper/swiper-bundle.min.js')}}"></script>
+<script>
+    // Initialize Swiper if needed
+    if (document.querySelector('.product-thumbnail-slider')) {
+        var swiper = new Swiper('.product-thumbnail-slider', {
+            slidesPerView: 1,
+            spaceBetween: 10,
+            loop: true,
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+            },
+        });
+    }
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

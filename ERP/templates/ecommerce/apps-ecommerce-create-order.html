@@ -1,0 +1,1134 @@
+{% extends "partials/base.html" %}
+{% block title %}{% if edit_mode %}Edit Order{% else %}Create New Order{% endif %}{% endblock title %}
+
+{% block extra_css %}
+<!-- flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* Main Card Styling */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+        margin-bottom: 30px;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header */
+    .card-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+    }
+    
+    .card-header-custom h4 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .card-header-custom p {
+        margin-bottom: 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+    
+    /* Edit Mode Badge */
+    .edit-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    
+    /* Card Body */
+    .card-body-custom {
+        padding: 2rem;
+    }
+    
+    /* Section Title */
+    .section-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+    
+    /* Customer Selection */
+    .customer-selector {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #eef2f6;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.7rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    /* Products Table */
+    .products-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    
+    .products-table thead th {
+        background: #f8fafc;
+        padding: 1rem;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-radius: 12px;
+    }
+    
+    .products-table tbody tr {
+        background: #f8fafc;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+    }
+    
+    .products-table tbody tr:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .products-table td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    /* Product Select */
+    .product-select {
+        min-width: 250px;
+        padding: 0.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+    }
+    
+    /* Quantity Input */
+    .quantity-input {
+        width: 90px;
+        text-align: center;
+        padding: 0.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    
+    /* Price Input */
+    .price-input {
+        width: 120px;
+        padding: 0.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    
+    /* Discount Input */
+    .discount-input {
+        width: 80px;
+        padding: 0.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    
+    /* Remove Button */
+    .btn-remove-row {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-remove-row:hover {
+        background: #fecaca;
+        transform: scale(1.1);
+    }
+    
+    .btn-remove-row i {
+        font-size: 1.1rem;
+    }
+    
+    /* Add Row Button */
+    .btn-add-row {
+        background: #f1f5f9;
+        color: #475569;
+        border: 2px dashed #cbd5e0;
+        border-radius: 16px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        margin-top: 1rem;
+    }
+    
+    .btn-add-row:hover {
+        background: #e2e8f0;
+        border-color: #94a3b8;
+    }
+    
+    /* Summary Card */
+    .summary-card {
+        background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .summary-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-row.total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #1e293b;
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .summary-row.profit {
+        color: #0a7e0a;
+        font-weight: 600;
+        background: #e6f7e6;
+        padding: 0.8rem;
+        border-radius: 12px;
+        margin-top: 0.5rem;
+    }
+    
+    .summary-row.profit.negative {
+        color: #b91c1c;
+        background: #fee9e9;
+    }
+    
+    .summary-value {
+        font-weight: 600;
+    }
+    
+    .summary-value.text-success {
+        color: #10b981;
+    }
+    
+    .summary-value.text-danger {
+        color: #ef4444;
+    }
+    
+    /* Payment Section */
+    .payment-section {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .payment-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .payment-item {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+    
+    .btn-cancel {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.8rem 2rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    .btn-cancel:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 0.8rem 3rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-save:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Stock Warning */
+    .stock-warning {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.3rem;
+        display: none;
+    }
+    
+    .stock-warning.show {
+        display: block;
+    }
+    
+    /* Item Total */
+    .item-total {
+        font-weight: 600;
+        color: #10b981;
+        min-width: 100px;
+        text-align: right;
+    }
+    
+    /* Hidden Item ID */
+    .item-id-hidden {
+        display: none;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .products-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .payment-row {
+            flex-direction: column;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">
+                            {% if edit_mode %}
+                                <i class="ri-edit-box-line"></i> Edit Order
+                            {% else %}
+                                <i class="ri-add-circle-line"></i> Create New Order
+                            {% endif %}
+                        </h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('orders.order_list') }}">Orders</a></li>
+                                <li class="breadcrumb-item active">
+                                    {% if edit_mode %}Edit{% else %}Create{% endif %}
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="main-card">
+                        <!-- Card Header -->
+                        <div class="card-header-custom">
+                            <h4>
+                                {% if edit_mode %}
+                                    <i class="ri-edit-box-line"></i>
+                                    Edit Order
+                                    {% if order %}
+                                    <span class="edit-badge">
+                                        <i class="ri-price-tag-3-line"></i> {{ order.order_id }}
+                                    </span>
+                                    {% endif %}
+                                {% else %}
+                                    <i class="ri-add-circle-line"></i>
+                                    Create New Order
+                                {% endif %}
+                            </h4>
+                            <p>
+                                {% if edit_mode %}
+                                    Update order details. You can add, remove, or modify products.
+                                {% else %}
+                                    Select customer and add multiple products to create an order. All calculations are automatic.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body-custom">
+                            <form method="POST" 
+                                  action="{% if edit_mode %}{{ url_for('orders.update_order', id=order.id) }}{% else %}{{ url_for('orders.create_order') }}{% endif %}" 
+                                  id="orderForm">
+                                
+                                <!-- Customer Selection -->
+                                <div class="customer-selector">
+                                    <div class="section-title">
+                                        <i class="ri-user-line"></i>
+                                        <span>Customer Information</span>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <label class="form-label">Select Customer <span class="text-danger">*</span></label>
+                                            <select class="form-select" name="customer_id" id="customerSelect" 
+                                                    {% if edit_mode %}disabled{% endif %} required>
+                                                <option value="">-- Choose Customer --</option>
+                                                {% for customer in customers %}
+                                                <option value="{{ customer.id }}" 
+                                                        {% if edit_mode and order and order.customer_id == customer.id %}selected{% endif %}
+                                                        data-email="{{ customer.email }}"
+                                                        data-phone="{{ customer.phone }}">
+                                                    {{ customer.name }} ({{ customer.email }})
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                            {% if edit_mode %}
+                                            <input type="hidden" name="customer_id" value="{{ order.customer_id }}">
+                                            <small class="text-muted">Customer cannot be changed after order creation</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <div class="selected-customer-info text-muted small" id="customerInfo">
+                                                {% if edit_mode and order %}
+                                                    <i class="ri-user-star-line text-success"></i> 
+                                                    {{ order.customer_name }} | {{ order.customer_email }}
+                                                {% else %}
+                                                    <i class="ri-information-line"></i>
+                                                    Select a customer to continue
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Products Section -->
+                                <div class="section-title">
+                                    <i class="ri-shopping-bag-line"></i>
+                                    <span>Order Items</span>
+                                    <span class="badge bg-info text-white ms-2" id="itemCount">0 items</span>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="products-table" id="productsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Qty</th>
+                                                <th>Price (₹)</th>
+                                                <th>Discount %</th>
+                                                <th>GST %</th>
+                                                <th>Total (₹)</th>
+                                                <th>Profit (₹)</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productRows">
+                                            <!-- Product rows will be added dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Add Product Button -->
+                                <button type="button" class="btn-add-row" id="addProductBtn">
+                                    <i class="ri-add-line"></i>
+                                    Add Another Product
+                                </button>
+
+                                <!-- Order Summary - FIXED: Live calculations -->
+                                <div class="summary-card">
+                                    <div class="summary-title">
+                                        <i class="ri-file-list-3-line"></i>
+                                        Order Summary
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Subtotal:</span>
+                                        <span class="summary-value" id="summarySubtotal">₹0.00</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Total Discount:</span>
+                                        <span class="summary-value text-danger" id="summaryDiscount">-₹0.00</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>After Discount:</span>
+                                        <span class="summary-value" id="summaryAfterDiscount">₹0.00</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Total GST:</span>
+                                        <span class="summary-value text-success" id="summaryGST">+₹0.00</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Shipping Charge:</span>
+                                        <span class="summary-value" id="summaryShipping">₹0.00</span>
+                                    </div>
+                                    <div class="summary-row total">
+                                        <span>Final Amount:</span>
+                                        <span class="summary-value text-primary fw-bold" id="summaryTotal">₹0.00</span>
+                                    </div>
+                                    <div class="summary-row profit" id="summaryProfitRow">
+                                        <span>
+                                            <i class="ri-bar-chart-2-line"></i>
+                                            Total Profit:
+                                        </span>
+                                        <span class="summary-value" id="summaryProfit">₹0.00</span>
+                                    </div>
+                                </div>
+
+                                <!-- Payment & Shipping Section -->
+                                <div class="payment-section">
+                                    <div class="section-title">
+                                        <i class="ri-bank-card-line"></i>
+                                        <span>Payment & Shipping</span>
+                                    </div>
+                                    <div class="payment-row">
+                                        <div class="payment-item">
+                                            <label class="form-label">Payment Method</label>
+                                            <select class="form-select" name="payment_method" id="paymentMethod">
+                                                <option value="Cash" {% if edit_mode and order.payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+                                                <option value="Card" {% if edit_mode and order.payment_method == 'Card' %}selected{% endif %}>Card</option>
+                                                <option value="UPI" {% if edit_mode and order.payment_method == 'UPI' %}selected{% endif %}>UPI</option>
+                                                <option value="Bank Transfer" {% if edit_mode and order.payment_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                                            </select>
+                                        </div>
+                                        <div class="payment-item">
+                                            <label class="form-label">Payment Status</label>
+                                            <select class="form-select" name="payment_status" id="paymentStatus">
+                                                <option value="Paid" {% if edit_mode and order.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                                                <option value="Unpaid" {% if edit_mode and order.payment_status == 'Unpaid' %}selected{% endif %} {% if not edit_mode %}selected{% endif %}>Unpaid</option>
+                                                <option value="Partial" {% if edit_mode and order.payment_status == 'Partial' %}selected{% endif %}>Partial</option>
+                                            </select>
+                                        </div>
+                                        <div class="payment-item">
+                                            <label class="form-label">Order Status</label>
+                                            <select class="form-select" name="status" id="orderStatus">
+                                                <option value="Pending" {% if edit_mode and order.status == 'Pending' %}selected{% endif %} {% if not edit_mode %}selected{% endif %}>Pending</option>
+                                                <option value="Processing" {% if edit_mode and order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                                                <option value="Delivered" {% if edit_mode and order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                                {% if edit_mode %}
+                                                <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                        <div class="payment-item">
+                                            <label class="form-label">Shipping Charge (₹)</label>
+                                            <input type="number" step="0.01" class="form-control" name="shipping_charge" 
+                                                   id="shippingCharge" value="{% if edit_mode %}{{ order.shipping_charge or 0 }}{% else %}0{% endif %}" 
+                                                   min="0">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" name="notes" rows="2" 
+                                                  placeholder="Add any notes about this order...">{% if edit_mode %}{{ order.notes or '' }}{% endif %}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('orders.order_list') }}" class="btn-cancel">
+                                        <i class="ri-close-line"></i>
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn-save" id="submitBtn" disabled>
+                                        <i class="{% if edit_mode %}ri-save-3-line{% else %}ri-add-line{% endif %}"></i>
+                                        {% if edit_mode %}Update Order{% else %}Create Order{% endif %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Check if we're in edit mode
+    const isEditMode = {{ 'true' if edit_mode else 'false' }};
+    
+    // Common elements
+    const productRows = document.getElementById('productRows');
+    const addProductBtn = document.getElementById('addProductBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const customerSelect = document.getElementById('customerSelect');
+    const shippingInput = document.getElementById('shippingCharge');
+    const itemCountSpan = document.getElementById('itemCount');
+    
+    // Summary elements
+    const summarySubtotal = document.getElementById('summarySubtotal');
+    const summaryDiscount = document.getElementById('summaryDiscount');
+    const summaryAfterDiscount = document.getElementById('summaryAfterDiscount');
+    const summaryGST = document.getElementById('summaryGST');
+    const summaryShipping = document.getElementById('summaryShipping');
+    const summaryTotal = document.getElementById('summaryTotal');
+    const summaryProfit = document.getElementById('summaryProfit');
+    const summaryProfitRow = document.getElementById('summaryProfitRow');
+    
+    // Products data for create mode
+    {% if not edit_mode %}
+    const products = {{ products|tojson }};
+    {% endif %}
+    
+    // Initialize row counter
+    let rowCount = 0;
+
+    // Customer info display
+    const customerInfo = document.getElementById('customerInfo');
+    
+    if (customerSelect) {
+        customerSelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            if (selected.value) {
+                const email = selected.dataset.email;
+                const phone = selected.dataset.phone;
+                customerInfo.innerHTML = `<i class="ri-user-star-line text-success"></i> ${selected.text} | ${email} | ${phone || 'No phone'}`;
+                checkFormValidity();
+            } else {
+                customerInfo.innerHTML = '<i class="ri-information-line"></i> Select a customer to continue';
+            }
+        });
+    }
+
+    // Initialize with existing items if in edit mode
+    {% if edit_mode and order_items %}
+        {% for item in order_items %}
+            addProductRow({{ item|tojson }}, {{ loop.index0 }});
+        {% endfor %}
+    {% else %}
+        // Add first product row automatically for create mode
+        if (!isEditMode) {
+            addProductRow();
+        }
+    {% endif %}
+
+    // Add product row function
+    function addProductRow(existingItem = null, index = null) {
+        const rowId = index !== null ? index : rowCount;
+        const row = document.createElement('tr');
+        row.id = `productRow_${rowId}`;
+        
+        {% if not edit_mode %}
+        // Create mode - with product selector
+        let options = '<option value="">Select Product</option>';
+        products.forEach(p => {
+            options += `<option value="${p.id}" 
+                data-sku="${p.sku || ''}"
+                data-suggested="${p.suggested_selling_price || 0}"
+                data-stock="${p.current_stock || 0}"
+                data-avg-price="${p.avg_purchase_price || 0}">
+                ${p.title} (${p.category || 'Uncategorized'}) - Stock: ${p.current_stock || 0}
+            </option>`;
+        });
+        
+        row.innerHTML = `
+            <td>
+                <select class="form-select product-select" name="items[${rowId}][product_id]" 
+                        id="product_${rowId}" onchange="updateProductInfo(${rowId})" required>
+                    ${options}
+                </select>
+                <div class="stock-warning" id="stockWarning_${rowId}"></div>
+            </td>
+            <td>
+                <input type="number" class="quantity-input" name="items[${rowId}][quantity]" 
+                       id="quantity_${rowId}" value="1" min="1" oninput="calculateItem(${rowId})">
+            </td>
+            <td>
+                <input type="number" step="0.01" class="price-input" name="items[${rowId}][selling_price]" 
+                       id="price_${rowId}" value="0" oninput="calculateItem(${rowId})">
+            </td>
+            <td>
+                <input type="number" step="0.01" class="discount-input" name="items[${rowId}][discount]" 
+                       id="discount_${rowId}" value="0" min="0" max="100" oninput="calculateItem(${rowId})">
+            </td>
+            <td>
+                <input type="number" step="0.01" class="discount-input" name="items[${rowId}][gst]" 
+                       id="gst_${rowId}" value="18" min="0" oninput="calculateItem(${rowId})">
+            </td>
+            <td>
+                <span class="item-total" id="total_${rowId}">₹0.00</span>
+            </td>
+            <td>
+                <span class="item-total" id="profit_${rowId}">₹0.00</span>
+            </td>
+            <td>
+                <button type="button" class="btn-remove-row" onclick="removeProductRow(${rowId})">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </td>
+        `;
+        {% else %}
+        // Edit mode - can have existing items or new ones
+        if (existingItem) {
+            // Existing item
+            row.innerHTML = `
+                <td>
+                    <input type="hidden" name="items[${rowId}][id]" value="${existingItem.id}">
+                    <input type="hidden" name="items[${rowId}][product_id]" value="${existingItem.product_id}">
+                    <div class="product-info">
+                        <span class="product-name">${existingItem.product_name}</span>
+                        ${existingItem.product_sku ? `<small class="text-muted d-block">SKU: ${existingItem.product_sku}</small>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <input type="number" class="quantity-input" name="items[${rowId}][quantity]" 
+                           id="quantity_${rowId}" value="${existingItem.quantity}" min="1" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="price-input" name="items[${rowId}][selling_price]" 
+                           id="price_${rowId}" value="${existingItem.selling_price}" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="discount-input" name="items[${rowId}][discount]" 
+                           id="discount_${rowId}" value="${existingItem.discount_percentage}" min="0" max="100" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="discount-input" name="items[${rowId}][gst]" 
+                           id="gst_${rowId}" value="${existingItem.gst_percentage}" min="0" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <span class="item-total" id="total_${rowId}">₹${existingItem.total.toFixed(2)}</span>
+                </td>
+                <td>
+                    <span class="item-total" id="profit_${rowId}">₹${existingItem.profit.toFixed(2)}</span>
+                </td>
+                <td>
+                    <button type="button" class="btn-remove-row" onclick="removeProductRow(${rowId})">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </td>
+            `;
+        } else {
+            // New item in edit mode
+            let options = '<option value="">Select Product</option>';
+            {% for product in products %}
+            options += `<option value="{{ product.id }}" 
+                data-sku="{{ product.sku|default('') }}"
+                data-suggested="{{ product.suggested_selling_price|default(0) }}"
+                data-stock="{{ product.current_stock|default(0) }}"
+                data-avg-price="{{ product.avg_purchase_price|default(0) }}">
+                {{ product.title }} - Stock: {{ product.current_stock|default(0) }}
+            </option>`;
+            {% endfor %}
+            
+            row.innerHTML = `
+                <td>
+                    <select class="form-select product-select" name="items[${rowId}][product_id]" 
+                            id="product_${rowId}" onchange="updateProductInfo(${rowId})" required>
+                        ${options}
+                    </select>
+                    <div class="stock-warning" id="stockWarning_${rowId}"></div>
+                </td>
+                <td>
+                    <input type="number" class="quantity-input" name="items[${rowId}][quantity]" 
+                           id="quantity_${rowId}" value="1" min="1" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="price-input" name="items[${rowId}][selling_price]" 
+                           id="price_${rowId}" value="0" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="discount-input" name="items[${rowId}][discount]" 
+                           id="discount_${rowId}" value="0" min="0" max="100" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="discount-input" name="items[${rowId}][gst]" 
+                           id="gst_${rowId}" value="18" min="0" oninput="calculateItem(${rowId})">
+                </td>
+                <td>
+                    <span class="item-total" id="total_${rowId}">₹0.00</span>
+                </td>
+                <td>
+                    <span class="item-total" id="profit_${rowId}">₹0.00</span>
+                </td>
+                <td>
+                    <button type="button" class="btn-remove-row" onclick="removeProductRow(${rowId})">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </td>
+            `;
+        }
+        {% endif %}
+        
+        productRows.appendChild(row);
+        
+        if (index === null) {
+            rowCount++;
+        } else {
+            rowCount = Math.max(rowCount, index + 1);
+        }
+        
+        // Attach product select change event for new rows
+        if (!existingItem) {
+            const productSelect = document.getElementById(`product_${rowId}`);
+            if (productSelect) {
+                productSelect.addEventListener('change', function() {
+                    updateProductInfo(rowId);
+                });
+            }
+        }
+        
+        // Initial calculation for the row
+        setTimeout(() => calculateItem(rowId), 100);
+        checkFormValidity();
+    }
+
+    // Update product info when product is selected
+    window.updateProductInfo = function(rowId) {
+        const select = document.getElementById(`product_${rowId}`);
+        if (!select) return;
+        
+        const selected = select.options[select.selectedIndex];
+        const priceInput = document.getElementById(`price_${rowId}`);
+        const stockWarning = document.getElementById(`stockWarning_${rowId}`);
+        
+        if (selected && selected.value) {
+            const suggestedPrice = parseFloat(selected.dataset.suggested) || 0;
+            const stock = parseInt(selected.dataset.stock) || 0;
+            
+            // Auto-fill suggested price if price is 0
+            if (priceInput) {
+                priceInput.value = suggestedPrice;
+            }
+            
+            // Show stock warning if low
+            if (stockWarning) {
+                if (stock <= 5) {
+                    stockWarning.textContent = `⚠️ Only ${stock} units available!`;
+                    stockWarning.classList.add('show');
+                } else {
+                    stockWarning.textContent = '';
+                    stockWarning.classList.remove('show');
+                }
+            }
+        }
+        
+        calculateItem(rowId);
+    };
+
+    // Calculate item values
+    window.calculateItem = function(rowId) {
+        const select = document.getElementById(`product_${rowId}`);
+        let avgPrice = 0;
+        let stock = 0;
+        
+        if (select && select.value) {
+            const selected = select.options[select.selectedIndex];
+            avgPrice = parseFloat(selected.dataset.avgPrice) || 0;
+            stock = parseInt(selected.dataset.stock) || 0;
+        }
+        
+        const quantityInput = document.getElementById(`quantity_${rowId}`);
+        const priceInput = document.getElementById(`price_${rowId}`);
+        const discountInput = document.getElementById(`discount_${rowId}`);
+        const gstInput = document.getElementById(`gst_${rowId}`);
+        
+        if (!quantityInput || !priceInput) return;
+        
+        const quantity = parseInt(quantityInput.value) || 1;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput ? discountInput.value : 0) || 0;
+        const gst = parseFloat(gstInput ? gstInput.value : 18) || 0;
+        
+        // Calculate
+        const subtotal = quantity * price;
+        const discountAmount = subtotal * (discount / 100);
+        const afterDiscount = subtotal - discountAmount;
+        const gstAmount = afterDiscount * (gst / 100);
+        const total = afterDiscount + gstAmount;
+        const profit = (price - avgPrice) * quantity;
+        
+        // Update display
+        const totalSpan = document.getElementById(`total_${rowId}`);
+        const profitSpan = document.getElementById(`profit_${rowId}`);
+        
+        if (totalSpan) totalSpan.textContent = '₹' + total.toFixed(2);
+        if (profitSpan) {
+            profitSpan.textContent = '₹' + profit.toFixed(2);
+            if (profit < 0) {
+                profitSpan.classList.add('text-danger');
+            } else {
+                profitSpan.classList.remove('text-danger');
+            }
+        }
+        
+        // Update summary
+        calculateSummary();
+    };
+
+    // Calculate order summary - FIXED: Always calculate from current rows
+    function calculateSummary() {
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalGST = 0;
+        let totalProfit = 0;
+        let itemCount = 0;
+        
+        // Loop through all rows
+        for (let i = 0; i < rowCount; i++) {
+            const row = document.getElementById(`productRow_${i}`);
+            if (!row) continue;
+            
+            const quantityInput = document.getElementById(`quantity_${i}`);
+            const priceInput = document.getElementById(`price_${i}`);
+            const discountInput = document.getElementById(`discount_${i}`);
+            const gstInput = document.getElementById(`gst_${i}`);
+            
+            if (!quantityInput || !priceInput) continue;
+            
+            const quantity = parseInt(quantityInput.value) || 1;
+            const price = parseFloat(priceInput.value) || 0;
+            const discount = parseFloat(discountInput ? discountInput.value : 0) || 0;
+            const gst = parseFloat(gstInput ? gstInput.value : 18) || 0;
+            
+            // Get avg price from select if available
+            let avgPrice = 0;
+            const select = document.getElementById(`product_${i}`);
+            if (select && select.value) {
+                const selected = select.options[select.selectedIndex];
+                avgPrice = parseFloat(selected.dataset.avgPrice) || 0;
+            }
+            
+            const itemSubtotal = quantity * price;
+            const itemDiscount = itemSubtotal * (discount / 100);
+            const itemAfterDiscount = itemSubtotal - itemDiscount;
+            const itemGST = itemAfterDiscount * (gst / 100);
+            const itemTotal = itemAfterDiscount + itemGST;
+            const itemProfit = (price - avgPrice) * quantity;
+            
+            subtotal += itemSubtotal;
+            totalDiscount += itemDiscount;
+            totalGST += itemGST;
+            totalProfit += itemProfit;
+            itemCount++;
+        }
+        
+        // Update item count
+        if (itemCountSpan) {
+            itemCountSpan.textContent = itemCount + ' item' + (itemCount !== 1 ? 's' : '');
+        }
+        
+        const afterDiscount = subtotal - totalDiscount;
+        const shipping = parseFloat(shippingInput ? shippingInput.value : 0) || 0;
+        const finalTotal = afterDiscount + totalGST + shipping;
+        
+        // Update summary
+        if (summarySubtotal) summarySubtotal.textContent = '₹' + subtotal.toFixed(2);
+        if (summaryDiscount) summaryDiscount.textContent = '-₹' + totalDiscount.toFixed(2);
+        if (summaryAfterDiscount) summaryAfterDiscount.textContent = '₹' + afterDiscount.toFixed(2);
+        if (summaryGST) summaryGST.textContent = '+₹' + totalGST.toFixed(2);
+        if (summaryShipping) summaryShipping.textContent = '₹' + shipping.toFixed(2);
+        if (summaryTotal) summaryTotal.textContent = '₹' + finalTotal.toFixed(2);
+        if (summaryProfit) summaryProfit.textContent = '₹' + totalProfit.toFixed(2);
+        
+        // Update profit row color
+        if (summaryProfitRow) {
+            if (totalProfit < 0) {
+                summaryProfitRow.classList.add('negative');
+            } else {
+                summaryProfitRow.classList.remove('negative');
+            }
+        }
+        
+        // Enable/disable submit button
+        checkFormValidity();
+    }
+
+    // Check if form is valid
+    function checkFormValidity() {
+        if (!submitBtn) return;
+        
+        // Check if customer is selected
+        const customerSelected = customerSelect ? customerSelect.value !== '' : isEditMode;
+        
+        // Check if at least one product is selected
+        let hasProducts = false;
+        for (let i = 0; i < rowCount; i++) {
+            const row = document.getElementById(`productRow_${i}`);
+            if (row) {
+                const select = document.getElementById(`product_${i}`);
+                // In edit mode, existing items might not have a select
+                if (isEditMode) {
+                    // Check if it has quantity input (existing items always have it)
+                    const quantityInput = document.getElementById(`quantity_${i}`);
+                    if (quantityInput) {
+                        hasProducts = true;
+                        break;
+                    }
+                } else {
+                    if (select && select.value) {
+                        hasProducts = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        submitBtn.disabled = !(customerSelected && hasProducts);
+    }
+
+    // Remove product row
+    window.removeProductRow = function(rowId) {
+        const row = document.getElementById(`productRow_${rowId}`);
+        if (row) {
+            row.remove();
+            calculateSummary();
+            checkFormValidity();
+        }
+    };
+
+    // Add product button click
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', function() {
+            if (isEditMode) {
+                addProductRow(); // Add new empty row in edit mode
+            } else {
+                addProductRow(); // Add new row in create mode
+            }
+        });
+    }
+
+    // Shipping charge change
+    if (shippingInput) {
+        shippingInput.addEventListener('input', calculateSummary);
+    }
+
+    // Initial calculation
+    setTimeout(calculateSummary, 200);
+
+    // Form submission validation
+    const form = document.getElementById('orderForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Final stock check for all rows
+            for (let i = 0; i < rowCount; i++) {
+                const row = document.getElementById(`productRow_${i}`);
+                if (row) {
+                    const select = document.getElementById(`product_${i}`);
+                    if (select && select.value) {
+                        const quantityInput = document.getElementById(`quantity_${i}`);
+                        if (quantityInput) {
+                            const quantity = parseInt(quantityInput.value) || 1;
+                            const stock = parseInt(select.options[select.selectedIndex].dataset.stock) || 0;
+                            
+                            if (quantity > stock) {
+                                e.preventDefault();
+                                alert(`Insufficient stock for ${select.options[select.selectedIndex].text}. Available: ${stock}`);
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Disable submit button
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+            }
+        });
+    }
+});
+
+// Make functions global
+window.updateProductInfo = window.updateProductInfo;
+window.calculateItem = window.calculateItem;
+window.removeProductRow = window.removeProductRow;
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

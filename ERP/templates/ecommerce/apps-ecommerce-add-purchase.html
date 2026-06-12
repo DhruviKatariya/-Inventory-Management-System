@@ -1,0 +1,474 @@
+{% extends "partials/base.html" %}
+{% block title %}{% if edit_mode %}Edit Purchase{% else %}Add Purchase{% endif %}{% endblock title %}
+
+{% block extra_css %}
+<!-- flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .form-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px 20px 0 0;
+    }
+    .preview-card {
+        background: #f8fafc;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    .stock-badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-weight: 500;
+        display: inline-block;
+    }
+    .info-item {
+        padding: 1rem;
+        border-radius: 10px;
+        background: white;
+        border: 1px solid #e2e8f0;
+    }
+    .info-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+    .info-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .required-star {
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+    .form-hint {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">
+                            {% if edit_mode %}
+                                Edit Purchase #{{ purchase.purchase_id }}
+                            {% else %}
+                                Add New Purchase
+                            {% endif %}
+                        </h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('purchases.purchase_list') }}">Purchases</a></li>
+                                <li class="breadcrumb-item active">{% if edit_mode %}Edit{% else %}Add{% endif %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="card form-card">
+                        <div class="form-header">
+                            <h4 class="text-white mb-0">
+                                <i class="{% if edit_mode %}ri-edit-box-line{% else %}ri-add-circle-line{% endif %} me-2"></i>
+                                {% if edit_mode %}Edit Purchase{% else %}New Purchase Entry{% endif %}
+                            </h4>
+                            <p class="text-white-50 mb-0 mt-2">
+                                {% if edit_mode %}
+                                    Update purchase details and stock will be adjusted automatically
+                                {% else %}
+                                    Add new stock by purchasing from seller. Stock will increase automatically.
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            <form method="POST" 
+                                  action="{% if edit_mode %}{{ url_for('purchases.update_purchase', id=purchase.id) }}{% else %}{{ url_for('purchases.add_purchase') }}{% endif %}">
+                                
+                                <!-- Seller Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        Select Seller <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-select form-select-lg" name="seller_id" id="sellerSelect" required>
+                                        <option value="">-- Choose Seller --</option>
+                                        {% for seller in sellers %}
+                                        <option value="{{ seller.id }}" 
+                                                {% if purchase and purchase.seller_id == seller.id %}selected{% endif %}
+                                                {% if not purchase and pre_selected_seller == seller.id %}selected{% endif %}>
+                                            {{ seller.get_full_name() }} 
+                                            {% if seller.company_name %} - {{ seller.company_name }}{% endif %}
+                                            {% if seller.gst_number %} (GST: {{ seller.gst_number }}){% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-hint">
+                                        <i class="ri-information-line"></i>
+                                        Select the seller from whom you are purchasing
+                                    </div>
+                                </div>
+
+                                <!-- Product Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        Select Product <span class="required-star">*</span>
+                                    </label>
+                                    <select class="form-select form-select-lg" name="product_id" id="productSelect" required>
+                                        <option value="">-- Choose Product --</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.id }}" 
+                                                data-avg-price="{{ product.get_average_purchase_price() }}"
+                                                data-current-stock="{{ product.get_current_stock() }}"
+                                                data-suggested-price="{{ product.suggested_selling_price }}"
+                                                data-sku="{{ product.sku }}"
+                                                {% if purchase and purchase.product_id == product.id %}selected{% endif %}
+                                                {% if not purchase and pre_selected_product == product.id %}selected{% endif %}>
+                                            {{ product.title }} 
+                                            {% if product.category %} ({{ product.category }}){% endif %}
+                                            - SKU: {{ product.sku }}
+                                            - Stock: {{ product.get_current_stock() }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-hint">
+                                        <i class="ri-information-line"></i>
+                                        Select the product you are purchasing
+                                    </div>
+                                </div>
+
+                                <!-- Product Preview Card -->
+                                <div class="preview-card" id="productPreview" style="display: none;">
+                                    <h6 class="mb-3">Product Information</h6>
+                                    <div class="row g-4">
+                                        <div class="col-md-3">
+                                            <div class="info-item">
+                                                <div class="info-label">SKU</div>
+                                                <div class="info-value" id="productSku">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-item">
+                                                <div class="info-label">Current Stock</div>
+                                                <div class="info-value" id="currentStock">0</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-item">
+                                                <div class="info-label">Avg Purchase Price</div>
+                                                <div class="info-value" id="avgPrice">₹0.00</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-item">
+                                                <div class="info-label">Suggested Price</div>
+                                                <div class="info-value" id="suggestedPrice">₹0.00</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <!-- Quantity -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">
+                                            Quantity <span class="required-star">*</span>
+                                        </label>
+                                        <input type="number" class="form-control form-control-lg" 
+                                               name="quantity" id="quantity" 
+                                               value="{{ purchase.quantity if purchase else '' }}" 
+                                               min="1" step="1" required>
+                                        <div class="form-hint">
+                                            <i class="ri-information-line"></i>
+                                            Number of units being purchased
+                                        </div>
+                                    </div>
+
+                                    <!-- Purchase Price -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">
+                                            Purchase Price (per unit) <span class="required-star">*</span>
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" step="0.01" min="0.01" 
+                                                   class="form-control" name="purchase_price" 
+                                                   id="purchasePrice" 
+                                                   value="{{ purchase.purchase_price if purchase else '' }}" 
+                                                   required>
+                                        </div>
+                                        <div class="form-hint">
+                                            <i class="ri-information-line"></i>
+                                            Price per unit (excluding tax)
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stock Preview -->
+                                <div class="alert alert-info mt-4" id="stockPreview" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-information-line fs-20 me-3"></i>
+                                        <div>
+                                            <strong>Stock will change from <span id="stockBefore">0</span> to <span id="stockAfter">0</span></strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                After this purchase, total stock will be updated automatically.
+                                                {% if edit_mode %}
+                                                <br>Note: Stock adjustment will be based on quantity difference.
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Cost Preview -->
+                                <div class="preview-card mt-4">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <h5 class="mb-0">Total Cost:</h5>
+                                            <small class="text-muted">Quantity × Purchase Price</small>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <h2 class="fw-bold text-success mb-0" id="totalCost">
+                                                ₹{% if purchase %}{{ "{:,.2f}".format(purchase.total_cost) }}{% else %}0.00{% endif %}
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden fields for additional data -->
+                                {% if edit_mode %}
+                                <input type="hidden" name="purchase_id" value="{{ purchase.id }}">
+                                {% endif %}
+
+                                <!-- Form Buttons -->
+                                <div class="mt-5 d-flex gap-2 justify-content-end">
+                                    <a href="{{ url_for('purchases.purchase_list') }}" class="btn btn-light btn-lg px-4">
+                                        <i class="ri-close-line me-2"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-success btn-lg px-5">
+                                        <i class="{% if edit_mode %}ri-save-3-line{% else %}ri-add-line{% endif %} me-2"></i>
+                                        {% if edit_mode %}Update Purchase{% else %}Add Purchase{% endif %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal (for edit mode) -->
+{% if edit_mode %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Purchase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                          colors="primary:#f7b84b,secondary:#f06548" style="width:80px;height:80px"></lord-icon>
+                <h5 class="mt-3">Are you sure?</h5>
+                <p class="text-muted">
+                    Purchase <strong>{{ purchase.purchase_id }}</strong> will be deleted.<br>
+                    Stock will be decreased by {{ purchase.quantity }} units.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" action="{{ url_for('purchases.delete_purchase', id=purchase.id) }}">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Purchase</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- Lordicon -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get DOM elements
+    const productSelect = document.getElementById('productSelect');
+    const quantityInput = document.getElementById('quantity');
+    const priceInput = document.getElementById('purchasePrice');
+    const totalCostSpan = document.getElementById('totalCost');
+    const productPreview = document.getElementById('productPreview');
+    const productSkuSpan = document.getElementById('productSku');
+    const currentStockSpan = document.getElementById('currentStock');
+    const avgPriceSpan = document.getElementById('avgPrice');
+    const suggestedPriceSpan = document.getElementById('suggestedPrice');
+    const stockPreview = document.getElementById('stockPreview');
+    const stockBeforeSpan = document.getElementById('stockBefore');
+    const stockAfterSpan = document.getElementById('stockAfter');
+
+    // Function to update product information when product is selected
+    function updateProductInfo() {
+        const selected = productSelect.options[productSelect.selectedIndex];
+        
+        if (selected && selected.value) {
+            // Get data from data attributes
+            const avgPrice = parseFloat(selected.dataset.avgPrice) || 0;
+            const currentStock = parseInt(selected.dataset.currentStock) || 0;
+            const suggestedPrice = parseFloat(selected.dataset.suggestedPrice) || 0;
+            const sku = selected.dataset.sku || '—';
+            
+            // Update preview
+            productSkuSpan.textContent = sku;
+            currentStockSpan.textContent = currentStock;
+            avgPriceSpan.textContent = '₹' + avgPrice.toFixed(2);
+            suggestedPriceSpan.textContent = '₹' + suggestedPrice.toFixed(2);
+            productPreview.style.display = 'block';
+            
+            // Auto-fill price with average purchase price if not already set
+            const currentPrice = parseFloat(priceInput.value) || 0;
+            if (currentPrice === 0 && avgPrice > 0) {
+                priceInput.value = avgPrice;
+            }
+            
+            // Update calculations
+            updateTotal();
+        } else {
+            productPreview.style.display = 'none';
+            stockPreview.style.display = 'none';
+        }
+    }
+
+    // Function to calculate total cost and update stock preview
+    function updateTotal() {
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const total = quantity * price;
+        
+        // Update total cost display
+        totalCostSpan.textContent = '₹' + total.toFixed(2);
+        
+        // Update stock preview
+        const currentStock = parseInt(currentStockSpan.textContent) || 0;
+        const newStock = currentStock + quantity;
+        
+        stockBeforeSpan.textContent = currentStock;
+        stockAfterSpan.textContent = newStock;
+        
+        // Show/hide stock preview based on quantity
+        if (quantity > 0) {
+            stockPreview.style.display = 'block';
+            
+            // Add visual indicator for stock change
+            if (quantity > 0) {
+                stockBeforeSpan.style.color = '#64748b';
+                stockAfterSpan.style.color = '#10b981';
+                stockAfterSpan.style.fontWeight = 'bold';
+            }
+        } else {
+            stockPreview.style.display = 'none';
+        }
+    }
+
+    // Add event listeners
+    productSelect.addEventListener('change', updateProductInfo);
+    quantityInput.addEventListener('input', updateTotal);
+    priceInput.addEventListener('input', updateTotal);
+
+    // Initial update if editing or pre-selected
+    if (productSelect.value) {
+        updateProductInfo();
+    }
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const sellerId = document.querySelector('[name="seller_id"]').value;
+        const productId = document.querySelector('[name="product_id"]').value;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        
+        if (!sellerId) {
+            e.preventDefault();
+            alert('Please select a seller');
+            return false;
+        }
+        
+        if (!productId) {
+            e.preventDefault();
+            alert('Please select a product');
+            return false;
+        }
+        
+        if (quantity <= 0) {
+            e.preventDefault();
+            alert('Quantity must be greater than zero');
+            return false;
+        }
+        
+        if (price <= 0) {
+            e.preventDefault();
+            alert('Purchase price must be greater than zero');
+            return false;
+        }
+    });
+
+    // Add loading state on form submit
+    form.addEventListener('submit', function() {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin me-2"></i>Processing...';
+        
+        // Re-enable after 10 seconds in case of error
+        setTimeout(function() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }, 10000);
+    });
+
+    // Price input formatting
+    priceInput.addEventListener('blur', function() {
+        if (this.value) {
+            this.value = parseFloat(this.value).toFixed(2);
+        }
+    });
+
+    // Quantity input validation
+    quantityInput.addEventListener('input', function() {
+        if (this.value < 0) {
+            this.value = 1;
+        }
+    });
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

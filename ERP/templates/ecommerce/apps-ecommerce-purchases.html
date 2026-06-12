@@ -1,0 +1,1007 @@
+{% extends "partials/base.html" %}
+{% block title %}Purchase Management{% endblock title %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    /* Main card styling - Matching other project cards */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header - Matching other project headers */
+    .card-header-custom {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .card-header-custom h5 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .card-header-custom h5 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+    
+    /* Stats Cards - Matching other project stats */
+    .stats-wrapper {
+        padding: 1.5rem 2rem 0.5rem 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #eef2f6;
+    }
+    
+    .stat-card:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .stat-card.warning {
+        background: #fff8e7;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .stat-card.danger {
+        background: #fee9e9;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .stat-card.success {
+        background: #e6f7e6;
+        border-left: 4px solid #10b981;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #667eea;
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stat-content h6 {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-content h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    
+    .stat-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .stat-badge.warning {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    /* Low Stock Alert Banner - Matching orders page */
+    .low-stock-alert {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        animation: pulse 2s infinite;
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .low-stock-alert:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
+        border-color: rgba(255,255,255,0.5);
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.95; }
+        100% { opacity: 1; }
+    }
+    
+    .low-stock-alert .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .low-stock-alert .alert-content i {
+        font-size: 1.5rem;
+    }
+    
+    .low-stock-alert .alert-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        backdrop-filter: blur(5px);
+    }
+    
+    .low-stock-items {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stock-item {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        backdrop-filter: blur(5px);
+        transition: all 0.2s ease;
+        cursor: pointer;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .stock-item:hover {
+        background: rgba(255,255,255,0.4);
+        transform: scale(1.05);
+        color: white;
+    }
+    
+    /* Search Box - Matching other project search */
+    .search-wrapper {
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-box {
+        position: relative;
+        width: 100%;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+        z-index: 10;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 45px;
+        border-radius: 50px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    /* Add Button - Matching other project */
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: 0.3px;
+        text-decoration: none;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-add i {
+        font-size: 1.1rem;
+    }
+    
+    /* Filter Section - SIMPLIFIED (Product & Seller only, no dates) */
+    .filter-wrapper {
+        padding: 0 2rem 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+    
+    .filter-item {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-item label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .filter-item select {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .filter-item select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-filter {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .btn-filter:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        transform: translateY(-2px);
+    }
+    
+    .btn-filter i {
+        font-size: 1rem;
+    }
+    
+    .btn-reset {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-reset:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    /* Table styling - Matching orders page */
+    .table-wrapper {
+        padding: 0 2rem 2rem 2rem;
+    }
+    
+    .table-purchases {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    
+    .table-purchases thead th {
+        background: #f8fafc;
+        padding: 1rem;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .table-purchases tbody tr {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
+    }
+    
+    .table-purchases tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    
+    .table-purchases tbody td {
+        padding: 1rem;
+        border: none;
+        vertical-align: middle;
+    }
+    
+    /* Product Info */
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .product-image {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: #f1f5f9;
+    }
+    
+    .product-details h6 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+        font-size: 0.95rem;
+    }
+    
+    .product-details small {
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+    
+    /* Seller info */
+    .seller-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .seller-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .seller-code {
+        font-size: 0.7rem;
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    /* Badges */
+    .badge-quantity {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.3rem 0.8rem;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    
+    .badge-stock {
+        padding: 0.3rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-stock.normal {
+        background: #e6f7e6;
+        color: #0a7e0a;
+    }
+    
+    .badge-stock.low {
+        background: #fff3d4;
+        color: #b45b0a;
+    }
+    
+    .badge-stock.critical {
+        background: #fee9e9;
+        color: #b91c1c;
+    }
+    
+    /* Purchase ID */
+    .purchase-id {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 0.9rem;
+    }
+    
+    /* Price */
+    .price {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .total-cost {
+        font-weight: 700;
+        color: #10b981;
+    }
+    
+    /* Action Buttons - Matching orders page */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border: none;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .action-btn.edit {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .action-btn.edit:hover {
+        background: #fde68a;
+        transform: scale(1.1);
+    }
+    
+    .action-btn.delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .action-btn.delete:hover {
+        background: #fecaca;
+        transform: scale(1.1);
+    }
+    
+    /* Highlight for filtered product */
+    .highlight-row {
+        background: #fff8e7 !important;
+        border-left: 4px solid #f59e0b !important;
+    }
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h5 {
+        color: #1e293b;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Modal styling */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 24px 24px 0 0;
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-body {
+        padding: 2rem;
+    }
+    
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .btn-light {
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+        font-weight: 500;
+    }
+    
+    .btn-light:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    .btn-danger {
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        background: #dc2626;
+        border: none;
+        font-weight: 500;
+    }
+    
+    .btn-danger:hover {
+        background: #b91c1c;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-header-custom {
+            padding: 1.5rem;
+        }
+        
+        .search-wrapper {
+            max-width: 100%;
+        }
+        
+        .stats-wrapper {
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filter-wrapper {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+        
+        .table-wrapper {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            overflow-x: auto;
+        }
+        
+        .low-stock-alert {
+            margin: 1rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Purchase Management</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Purchases</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Low Stock Alert Banner - REMOVED manage button, only clickable items -->
+            {% set low_stock_products = [] %}
+            {% for product in products %}
+                {% if product.get_current_stock() <= 5 %}
+                    {% set low_stock_products = low_stock_products.append(product) %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if low_stock_products|length > 0 %}
+            <div class="low-stock-alert">
+                <div class="alert-content">
+                    <i class="ri-alert-line"></i>
+                    <span>
+                        <strong>Low Stock Alert!</strong>
+                        {{ low_stock_products|length }} product(s) have stock ≤5 units
+                    </span>
+                    <span class="alert-badge">{{ low_stock_products|length }}</span>
+                </div>
+                <div class="low-stock-items">
+                    {% for product in low_stock_products[:3] %}
+                    <a href="{{ url_for('purchases.purchase_list', product_id=product.id) }}" 
+                       class="stock-item">
+                        <i class="ri-capsule-line"></i>
+                        {{ product.title }} ({{ product.get_current_stock() }} left)
+                    </a>
+                    {% endfor %}
+                    {% if low_stock_products|length > 3 %}
+                    <span class="stock-item" onclick="window.location.href='{{ url_for('products.product_list') }}?filter=lowstock'">
+                        +{{ low_stock_products|length - 3 }} more
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Main Card - Matching other project cards -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="main-card">
+                        <!-- Card Header - Matching orders page -->
+                        <div class="card-header-custom">
+                            <h5>
+                                <i class="ri-shopping-cart-2-line"></i>
+                                Purchase Management
+                            </h5>
+                            <div class="search-wrapper">
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" class="form-control" id="searchPurchase" 
+                                           placeholder="Search purchases...">
+                                </div>
+                            </div>
+                            <a href="{{ url_for('purchases.add_purchase') }}" class="btn-add">
+                                <i class="ri-add-line"></i>
+                                Add Purchase
+                            </a>
+                        </div>
+
+                        <!-- Statistics Cards - Matching orders page -->
+                        <div class="stats-wrapper">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="ri-shopping-cart-2-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Purchases</h6>
+                                    <h3>{{ total_purchases }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="ri-stack-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Quantity</h6>
+                                    <h3>{{ total_quantity }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="ri-money-rupee-circle-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Spent</h6>
+                                    <h3>₹{{ "{:,.0f}".format(total_cost) }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card {% if low_stock_products|length > 0 %}warning{% endif %}">
+                                <div class="stat-icon">
+                                    <i class="ri-alert-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Low Stock (≤5)</h6>
+                                    <h3>{{ low_stock_products|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Section - SIMPLIFIED (Product & Seller only, NO DATES) -->
+                        <div class="filter-wrapper">
+                            <form method="GET" action="{{ url_for('purchases.purchase_list') }}" class="filter-row" id="filterForm">
+                                <div class="filter-item">
+                                    <label>Filter by Seller</label>
+                                    <select name="seller_id" id="sellerSelect" onchange="this.form.submit()">
+                                        <option value="">All Sellers</option>
+                                        {% for seller in sellers %}
+                                        <option value="{{ seller.id }}" {% if seller_id == seller.id %}selected{% endif %}>
+                                            {{ seller.get_full_name() }} {% if seller.company_name %}({{ seller.company_name }}){% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-item">
+                                    <label>Filter by Product</label>
+                                    <select name="product_id" id="productSelect" onchange="this.form.submit()">
+                                        <option value="">All Products</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.id }}" {% if product_id == product.id %}selected{% endif %}>
+                                            {{ product.title }} (Stock: {{ product.get_current_stock() }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-item">
+                                    <a href="{{ url_for('purchases.purchase_list') }}" class="btn-reset">
+                                        <i class="ri-refresh-line"></i>
+                                        Reset
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Table Section -->
+                        <div class="table-wrapper">
+                            {% if purchases %}
+                            <div class="table-responsive">
+                                <table class="table-purchases" id="purchasesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Purchase ID</th>
+                                            <th>Date</th>
+                                            <th>Product</th>
+                                            <th>Seller</th>
+                                            <th>Qty</th>
+                                            <th>Price/Unit</th>
+                                            <th>Total Cost</th>
+                                            <th>Current Stock</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for purchase in purchases %}
+                                        <tr class="{% if product_id and purchase.product_id|string == product_id|string %}highlight-row{% endif %}">
+                                            <td>
+                                                <span class="purchase-id">{{ purchase.purchase_id }}</span>
+                                            </td>
+                                            <td>{{ purchase.purchase_date.strftime('%d %b %Y') }}</td>
+                                            <td>
+                                                <div class="product-info">
+                                                    {% if purchase.product and purchase.product.image %}
+                                                        <img src="{{ url_for('static', filename='uploads/' + purchase.product.image) }}" 
+                                                             class="product-image">
+                                                    {% else %}
+                                                        <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                                            <i class="ri-image-line text-muted"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="product-details">
+                                                        <h6>{{ purchase.product.title if purchase.product else 'N/A' }}</h6>
+                                                        <small>{{ purchase.product.category if purchase.product else '' }}</small>
+                                                        {% if purchase.product and purchase.product.sku %}
+                                                        <small class="text-muted">SKU: {{ purchase.product.sku }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if purchase.seller %}
+                                                <div class="seller-info">
+                                                    <span class="seller-name">{{ purchase.seller.get_full_name() }}</span>
+                                                    {% if purchase.seller.company_name %}
+                                                    <small class="text-muted">{{ purchase.seller.company_name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                                {% else %}
+                                                <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge-quantity">{{ purchase.quantity }}</span>
+                                            </td>
+                                            <td class="price">₹{{ "{:,.2f}".format(purchase.purchase_price) }}</td>
+                                            <td class="total-cost">₹{{ "{:,.2f}".format(purchase.total_cost) }}</td>
+                                            <td>
+                                                {% if purchase.product %}
+                                                    {% set current_stock = purchase.product.get_current_stock() %}
+                                                    {% if current_stock <= 0 %}
+                                                        <span class="badge-stock critical">Out of Stock</span>
+                                                    {% elif current_stock <= 5 %}
+                                                        <span class="badge-stock low">{{ current_stock }} left</span>
+                                                    {% else %}
+                                                        <span class="badge-stock normal">{{ current_stock }}</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a href="{{ url_for('purchases.edit_purchase', id=purchase.id) }}" 
+                                                       class="action-btn edit" title="Edit">
+                                                        <i class="ri-pencil-fill"></i>
+                                                    </a>
+                                                    <button type="button" 
+                                                            class="action-btn delete" 
+                                                            onclick="deletePurchase({{ purchase.id }}, '{{ purchase.purchase_id }}')"
+                                                            title="Delete">
+                                                        <i class="ri-delete-bin-fill"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <i class="ri-shopping-cart-2-line"></i>
+                                <h5>No Purchases Found</h5>
+                                <p class="text-muted">Start by adding your first purchase transaction</p>
+                                <a href="{{ url_for('purchases.add_purchase') }}" class="btn-add">
+                                    <i class="ri-add-line me-2"></i>Add Purchase
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                          colors="primary:#f7b84b,secondary:#f06548" style="width:80px;height:80px"></lord-icon>
+                <h5 class="mt-3">Are you sure?</h5>
+                <p class="text-muted">
+                    Purchase <strong id="deletePurchaseId"></strong> will be permanently deleted.<br>
+                    Stock will be decreased by the purchase quantity.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="deleteForm">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Purchase</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Lordicon -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+let deleteId = null;
+
+function deletePurchase(id, purchaseId) {
+    deleteId = id;
+    document.getElementById('deleteForm').action = "{{ url_for('purchases.delete_purchase', id=0) }}".replace('0', id);
+    document.getElementById('deletePurchaseId').textContent = purchaseId;
+    var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+$(document).ready(function() {
+    // Initialize DataTable for client-side search
+    var table = $('#purchasesTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        order: [[1, 'desc']], // Sort by date desc
+        columnDefs: [
+            { orderable: false, targets: [8] } // Actions column not sortable
+        ],
+        language: {
+            emptyTable: "No purchases found",
+            search: "",
+            searchPlaceholder: "Search purchases..."
+        },
+        dom: 'rt<"bottom"lip>', // Remove default search box (we have custom one)
+        initComplete: function() {
+            // Connect custom search box to DataTable
+            $('#searchPurchase').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+        }
+    });
+    
+    // Check if we have a product_id in URL and scroll to it (from orders page alert)
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product_id');
+    if (productId) {
+        // Find the highlighted row and scroll to it
+        const highlightedRow = document.querySelector('.highlight-row');
+        if (highlightedRow) {
+            setTimeout(() => {
+                highlightedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+        }
+    }
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

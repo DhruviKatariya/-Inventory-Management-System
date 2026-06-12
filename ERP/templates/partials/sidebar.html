@@ -1,0 +1,359 @@
+{% block sidebar %}
+<!-- ========== App Menu ========== -->
+<div class="app-menu navbar-menu">
+    <!-- LOGO -->
+    <div class="navbar-brand-box">
+        <!-- Dark Logo-->
+        <a href="/" class="logo logo-dark">
+            <span class="logo-sm">
+                <img src="{{url_for('static' ,filename='images/logo-sm.png')}}" alt="" height="22">
+            </span>
+            <span class="logo-lg">
+                <img src="{{url_for('static' ,filename='images/logo-dark.png')}}" alt="" height="17">
+            </span>
+        </a>
+        <!-- Light Logo-->
+        <a href="/" class="logo logo-light">
+            <span class="logo-sm">
+                <img src="{{url_for('static' ,filename='images/logo-sm.png')}}" alt="" height="22">
+            </span>
+            <span class="logo-lg">
+                <img src="{{url_for('static' ,filename='images/logo-light.png')}}" alt="" height="17">
+            </span>
+        </a>
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+            <i class="ri-record-circle-line"></i>
+        </button>
+    </div>
+
+    <!-- Scrollable Area -->
+    <div class="scrollbar-container">
+        <div class="container-fluid">
+            <div id="two-column-menu"></div>
+            <ul class="navbar-nav" id="navbar-nav">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a href="/" class="nav-link menu-link">
+                        <i class="ri-dashboard-2-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                
+                <!-- Ecommerce Dropdown -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarEcommerce" data-bs-toggle="collapse" role="button" aria-expanded="true">
+                        <i class="ri-shopping-bag-3-line"></i>
+                        <span>Ecommerce</span>
+                        <i class="ri-arrow-down-s-line ms-auto"></i>
+                    </a>
+                    <div class="collapse menu-dropdown show" id="sidebarEcommerce">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="/ecommerce/products" class="nav-link">
+                                    <i class="ri-product-hunt-line"></i> Products
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/ecommerce/add_product" class="nav-link">
+                                    <i class="ri-add-circle-line"></i> Create Product
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('purchases.add_purchase') }}" class="nav-link">
+                                    <i class="ri-shopping-cart-2-line"></i> Add Purchase
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('purchases.purchase_list') }}" class="nav-link">
+                                    <i class="ri-file-list-3-line"></i> Purchase List
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/ecommerce/orders" class="nav-link">
+                                    <i class="ri-truck-line"></i> Orders
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ url_for('orders.create_order') }}" class="nav-link">
+                                    
+                                    <i class="ri-add-box-line"></i> Create Order
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/ecommerce/customer" class="nav-link">
+                                    <i class="ri-group-line"></i> Customers
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/ecommerce/sellers" class="nav-link">
+                                    <i class="ri-store-2-line"></i> Sellers
+                                </a>
+                            </li>
+                            
+                        </ul>
+                    </div>
+                </li>
+
+                
+
+                <!-- Admin Profile -->
+                <li class="nav-item">
+                    <a href="{{ url_for('account.profile') }}" class="nav-link">
+                        <i class="ri-admin-line"></i>
+                        <span>Admin Profile</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="sidebar-background"></div>
+</div>
+
+<style>
+/* Main Sidebar Styling - Dark Blue Theme */
+.app-menu {
+    background: linear-gradient(180deg, #0a1929 0%, #0e1e2f 100%);
+    width: 245px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #1e3a5f;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Logo Area */
+.navbar-brand-box {
+    padding: 20px 20px;
+    border-bottom: 1px solid #1e3a5f;
+    background: #0a1929;
+}
+
+/* Scrollbar Container */
+.scrollbar-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #2d5788 #0a1929;
+}
+
+/* Custom Scrollbar for Webkit */
+.scrollbar-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.scrollbar-container::-webkit-scrollbar-track {
+    background: #0a1929;
+}
+
+.scrollbar-container::-webkit-scrollbar-thumb {
+    background: #2d5788;
+    border-radius: 10px;
+}
+
+.scrollbar-container::-webkit-scrollbar-thumb:hover {
+    background: #3a6cab;
+}
+
+/* Navigation Items */
+.navbar-nav {
+    padding: 10px 0;
+    margin: 0;
+    list-style: none;
+}
+
+.nav-item {
+    margin: 2px 0;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #e6ecf1 !important;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.nav-link i {
+    font-size: 18px;
+    margin-right: 12px;
+    color: #4d8fd8;
+    width: 22px;
+    text-align: center;
+}
+
+.nav-link:hover {
+    background: #1a3150;
+    color: #ffffff !important;
+    border-left-color: #fcb570;
+}
+
+.nav-link.active {
+    background: #1c3b61;
+    color: #ffffff !important;
+    border-left-color: #fcb570;
+}
+
+.nav-link.active i {
+    color: #fcb570;
+}
+
+/* Dropdown Menu */
+.menu-dropdown {
+    background: #0e1e2f;
+    padding-left: 0;
+    margin: 0;
+}
+
+.menu-dropdown .nav-link {
+    padding-left: 45px;
+    font-size: 13px;
+}
+
+.menu-dropdown .nav-link i {
+    font-size: 16px;
+    margin-right: 10px;
+    color: #6a9bd8;
+}
+
+/* Menu Titles */
+.menu-title {
+    padding: 20px 20px 8px 20px;
+    color: #6d8eb0;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+}
+
+.menu-title i {
+    font-size: 14px;
+    margin-right: 8px;
+    color: #fcb570;
+}
+
+/* Arrow icon */
+.ri-arrow-down-s-line {
+    font-size: 16px;
+    transition: transform 0.2s;
+}
+
+[aria-expanded="true"] .ri-arrow-down-s-line {
+    transform: rotate(180deg);
+}
+
+/* Logo styling */
+.logo span {
+    display: flex;
+    align-items: center;
+}
+
+.logo-sm img {
+    height: 24px;
+}
+
+.logo-lg img {
+    height: 20px;
+}
+
+/* Button hover */
+.btn-vertical-sm-hover {
+    background: transparent;
+    border: none;
+    color: #4d8fd8;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.btn-vertical-sm-hover:hover {
+    color: #fcb570;
+}
+
+/* Container */
+.container-fluid {
+    padding: 0;
+}
+
+/* Sidebar Background */
+.sidebar-background {
+    display: none;
+}
+
+/* Vertical Overlay */
+.vertical-overlay {
+    display: none;
+}
+</style>
+
+<script>
+(function() {
+    // Collapse toggle functionality
+    const menuLinks = document.querySelectorAll('.menu-link[data-bs-toggle="collapse"]');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (!targetId) return;
+            const target = document.querySelector(targetId);
+            if (target) {
+                target.classList.toggle('show');
+                this.setAttribute('aria-expanded', target.classList.contains('show'));
+            }
+        });
+    });
+
+    // Active link based on current URL
+    const currentPath = window.location.pathname;
+    
+    // Remove active class from all
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    
+    // Set active based on path
+    if (currentPath === '/' || currentPath.includes('dashboard')) {
+        document.querySelector('a[href="/"]')?.classList.add('active');
+    } else if (currentPath.includes('add_purchase')) {
+        document.querySelector('a[href*="add_purchase"]')?.classList.add('active');
+    } else if (currentPath.includes('purchase_list')) {
+        document.querySelector('a[href*="purchase_list"]')?.classList.add('active');
+    } else if (currentPath.includes('products')) {
+        document.querySelector('a[href*="products"]')?.classList.add('active');
+    } else if (currentPath.includes('orders')) {
+        document.querySelector('a[href*="orders"]')?.classList.add('active');
+    } else if (currentPath.includes('customer')) {
+        document.querySelector('a[href*="customer"]')?.classList.add('active');
+    } else if (currentPath.includes('sellers')) {
+        document.querySelector('a[href*="sellers"]')?.classList.add('active');
+    } else if (currentPath.includes('admin/profile')) {
+        document.querySelector('a[href*="admin/profile"]')?.classList.add('active');
+    }
+
+    // Expand parent collapses for active items
+    document.querySelectorAll('.nav-link.active').forEach(link => {
+        let parent = link.closest('.collapse');
+        while (parent) {
+            parent.classList.add('show');
+            const toggle = document.querySelector(`.menu-link[href="#${parent.id}"]`);
+            if (toggle) toggle.setAttribute('aria-expanded', 'true');
+            parent = parent.parentElement?.closest('.collapse');
+        }
+    });
+
+    // Handle purchase pages specifically
+    if (currentPath.includes('purchase/add') || currentPath.includes('purchases')) {
+        document.getElementById('sidebarEcommerce')?.classList.add('show');
+        document.querySelector('.menu-link[href="#sidebarEcommerce"]')?.setAttribute('aria-expanded', 'true');
+    }
+})();
+</script>
+
+<div class="vertical-overlay"></div>
+{% endblock sidebar %}

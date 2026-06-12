@@ -1,0 +1,1330 @@
+{% extends "partials/base.html" %}
+{% block title %}Customers{% endblock title %}
+
+{% block extra_css %}
+<style>
+    /* Main Card - Clean and Simple */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header */
+    .card-header-custom {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .card-header-custom h5 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .card-header-custom h5 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+    
+    /* Low Stock Alert Banner */
+    {% if low_stock_count and low_stock_count > 0 %}
+    .low-stock-alert {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        animation: pulse 2s infinite;
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .low-stock-alert:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
+        border-color: rgba(255,255,255,0.5);
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.95; }
+        100% { opacity: 1; }
+    }
+    
+    .low-stock-alert i {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    .low-stock-alert .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .low-stock-alert .alert-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        backdrop-filter: blur(5px);
+    }
+    
+    .low-stock-items {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stock-item {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        backdrop-filter: blur(5px);
+        transition: all 0.2s ease;
+        cursor: pointer;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .stock-item:hover {
+        background: rgba(255,255,255,0.4);
+        transform: scale(1.05);
+        color: white;
+    }
+    
+    .alert-hover-text {
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(255,255,255,0.15);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+    }
+    {% endif %}
+    
+    /* Stats Cards */
+    .stats-wrapper {
+        padding: 1.5rem 2rem 0.5rem 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        border: 1px solid #eef2f6;
+        cursor: pointer;
+    }
+    
+    .stat-card:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .stat-card.warning {
+        background: #fff8e7;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #667eea;
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stat-content h6 {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stat-content h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    
+    /* Search Box */
+    .search-wrapper {
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-box {
+        position: relative;
+        width: 100%;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 45px;
+        border-radius: 50px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .search-box input:focus + i {
+        color: #667eea;
+    }
+    
+    /* Button Styles */
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: 0.3px;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-add i {
+        font-size: 1.1rem;
+    }
+    
+    .btn-import {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .btn-import:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .btn-import i {
+        font-size: 1.1rem;
+    }
+    
+    /* Filter Section */
+    .filter-wrapper {
+        padding: 0 2rem 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+    
+    .filter-item {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .filter-item label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .filter-item select,
+    .filter-item input {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .filter-item select:focus,
+    .filter-item input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-filter {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .btn-filter:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        transform: translateY(-2px);
+    }
+    
+    .btn-reset {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-reset:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    /* Table */
+    .table-wrapper {
+        padding: 0 2rem 2rem 2rem;
+        overflow-x: auto;
+    }
+    
+    .table-customers {
+        margin-bottom: 0;
+        width: 100%;
+        min-width: 1200px;
+    }
+    
+    .table-customers thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+    
+    .table-customers tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .table-customers tbody tr:hover {
+        background: #faf9ff;
+    }
+    
+    /* Customer Info */
+    .customer-info h6 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.2rem;
+        font-size: 0.95rem;
+    }
+    
+    .customer-info small {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        display: block;
+    }
+    
+    .customer-location {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.2rem;
+    }
+    
+    .customer-location i {
+        font-size: 0.7rem;
+        margin-right: 0.2rem;
+        color: #667eea;
+    }
+    
+    /* Badges */
+    .badge-status {
+        padding: 0.35rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .badge-status.active {
+        background: #e6f7e6;
+        color: #0a7e0a;
+    }
+    
+    .badge-status.block {
+        background: #fee9e9;
+        color: #b91c1c;
+    }
+    
+    /* Stats Badge */
+    .stats-badge {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    /* Last Order Badge */
+    .last-order {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.2rem;
+    }
+    
+    /* Action Dropdown */
+    .btn-action {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.4rem 0.8rem;
+        color: #64748b;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-action:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+        color: #334155;
+    }
+    
+    .btn-action i {
+        font-size: 1.1rem;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        padding: 0.5rem;
+    }
+    
+    .dropdown-item {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        color: #4a5568;
+        border-radius: 10px;
+    }
+    
+    .dropdown-item i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+        width: 1.2rem;
+    }
+    
+    .dropdown-item:hover {
+        background: #f1f5f9;
+    }
+    
+    .dropdown-item.text-danger:hover {
+        background: #fee9e9;
+    }
+    
+    /* Import Modal */
+    .import-modal-body {
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .import-icon {
+        width: 80px;
+        height: 80px;
+        background: #f0f9ff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        color: #0a7e0a;
+    }
+    
+    .csv-format {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        text-align: left;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .csv-format pre {
+        margin: 0;
+        color: #1e293b;
+        font-size: 0.85rem;
+    }
+    
+    /* Modal */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 24px 24px 0 0;
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+    
+    .modal-body {
+        padding: 2rem;
+    }
+    
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #475569;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.7rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-light {
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+    }
+    
+    .btn-light:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    .btn-danger {
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h5 {
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-header-custom {
+            padding: 1.5rem;
+            flex-direction: column;
+        }
+        
+        .search-wrapper {
+            max-width: 100%;
+        }
+        
+        .stats-wrapper {
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filter-wrapper {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+        
+        .table-wrapper {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+        
+        .filter-row {
+            flex-direction: column;
+        }
+        
+        .filter-item {
+            width: 100%;
+        }
+        
+        .low-stock-alert {
+            margin: 1rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .stats-wrapper {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Customers</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Customers</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+            
+            <!-- Low Stock Alert -->
+            {% if low_stock_count and low_stock_count > 0 %}
+            <div class="low-stock-alert" onclick="window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                <div class="alert-content">
+                    <i class="ri-alert-line"></i>
+                    <span>
+                        <strong>Low Stock Alert!</strong>
+                        {{ low_stock_count }} product(s) have stock ≤5 units
+                    </span>
+                    <span class="alert-badge">{{ low_stock_count }}</span>
+                </div>
+                <div class="alert-hover-text">
+                    <i class="ri-arrow-right-line"></i> Click to manage stock
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12">
+                    <!-- Single Card -->
+                    <div class="main-card card">
+                        <!-- Card Header with Search and Add -->
+                        <div class="card-header-custom">
+                            <h5>
+                                <i class="ri-group-line"></i>
+                                Customer Management
+                            </h5>
+                            <div class="search-wrapper">
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" class="form-control" id="searchCustomer" 
+                                           placeholder="Search by name, email, phone, city...">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <button class="btn-import" data-bs-toggle="modal" data-bs-target="#importModal">
+                                    <i class="ri-upload-2-line"></i>
+                                    Import CSV
+                                </button>
+                                <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                    <i class="ri-add-line"></i>
+                                    Add Customer
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filter Section -->
+                        <div class="filter-wrapper">
+                            <form method="GET" action="{{ url_for('customers.customer_list') }}" class="filter-row" id="filterForm">
+                                <div class="filter-item">
+                                    <label>Status</label>
+                                    <select name="status" class="form-select" onchange="this.form.submit()">
+                                        <option value="">All Status</option>
+                                        <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+                                        <option value="Block" {% if status_filter == 'Block' %}selected{% endif %}>Block</option>
+                                    </select>
+                                </div>
+                                <div class="filter-item">
+                                    <label>City</label>
+                                    <select name="city" class="form-select" onchange="this.form.submit()">
+                                        <option value="">All Cities</option>
+                                        {% for city in cities %}
+                                        <option value="{{ city }}" {% if city_filter == city %}selected{% endif %}>{{ city }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="filter-item">
+                                    <label>From Date</label>
+                                    <input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}" onchange="this.form.submit()">
+                                </div>
+                                <div class="filter-item">
+                                    <label>To Date</label>
+                                    <input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}" onchange="this.form.submit()">
+                                </div>
+                                <div class="filter-item">
+                                    <button type="submit" class="btn-filter">
+                                        <i class="ri-filter-3-line"></i>
+                                        Apply
+                                    </button>
+                                </div>
+                                <div class="filter-item">
+                                    <a href="{{ url_for('customers.customer_list') }}" class="btn-reset">
+                                        <i class="ri-refresh-line"></i>
+                                        Reset
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Statistics Cards -->
+                        <div class="stats-wrapper">
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('customers.customer_list') }}'">
+                                <div class="stat-icon">
+                                    <i class="ri-group-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Customers</h6>
+                                    <h3>{{ total_customers }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('customers.customer_list') }}?status=Active'">
+                                <div class="stat-icon">
+                                    <i class="ri-user-star-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Active</h6>
+                                    <h3>{{ active_customers }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('customers.customer_list') }}?status=Block'">
+                                <div class="stat-icon">
+                                    <i class="ri-user-unfollow-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Blocked</h6>
+                                    <h3>{{ total_customers - active_customers }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card" onclick="window.location.href='{{ url_for('orders.order_list') }}'">
+                                <div class="stat-icon">
+                                    <i class="ri-money-rupee-circle-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>Total Revenue</h6>
+                                    <h3>₹{{ "{:,.0f}".format(total_revenue) }}</h3>
+                                </div>
+                            </div>
+                            <div class="stat-card {% if low_stock_count > 0 %}warning{% endif %}" 
+                                 onclick="window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                                <div class="stat-icon">
+                                    <i class="ri-calendar-check-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h6>New This Month</h6>
+                                    <h3>{{ new_customers_this_month }}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-wrapper">
+                            {% if customers %}
+                            <div class="table-responsive">
+                                <div id="customerTable">
+                                    <table class="table table-customers">
+                                        <thead>
+                                            <tr>
+                                                
+                                                <th>Customer</th>
+                                                <th>Contact</th>
+                                                <th>Location</th>
+                                                <th>Join Date</th>
+                                                <th>Status</th>
+                                                <th>Orders</th>
+                                                <th>Total Spent</th>
+                                                <th>Last Order</th>
+                                                <th style="width: 80px;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="list">
+                                            {% for c in customers %}
+                                            <tr>
+                                                
+
+                                                <!-- Customer -->
+                                                <td class="customer_name">
+                                                    <div class="customer-info">
+                                                        <h6>{{ c.name }}</h6>
+                                                        <small>{{ c.email }}</small>
+                                                    </div>
+                                                </td>
+
+                                                <!-- Contact -->
+                                                <td>
+                                                    {{ c.phone or '—' }}
+                                                </td>
+
+                                                <!-- Location -->
+                                                <td>
+                                                    {% if c.city or c.state %}
+                                                        <div class="customer-location">
+                                                            <i class="ri-map-pin-line"></i>
+                                                            {{ c.city or '' }}{% if c.city and c.state %}, {% endif %}{{ c.state or '' }}
+                                                        </div>
+                                                        {% if c.address %}
+                                                            <small class="text-muted">{{ c.address[:25] }}{% if c.address|length > 25 %}...{% endif %}</small>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Join Date -->
+                                                <td class="date">
+                                                    {{ c.join_date.strftime('%d %b %Y') if c.join_date else '—' }}
+                                                </td>
+
+                                                <!-- Status -->
+                                                <td class="status">
+                                                    {% if c.status == 'Active' %}
+                                                        <span class="badge-status active">Active</span>
+                                                    {% else %}
+                                                        <span class="badge-status block">Blocked</span>
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Orders -->
+                                                <td>
+                                                    <span class="stats-badge">
+                                                        <i class="ri-shopping-cart-line me-1"></i>
+                                                        {{ c.order_count }}
+                                                    </span>
+                                                </td>
+
+                                                <!-- Total Spent -->
+                                                <td>
+                                                    ₹{{ "{:,.0f}".format(c.total_spent) }}
+                                                </td>
+
+                                                <!-- Last Order -->
+                                                <td>
+                                                    {% if c.last_order_date %}
+                                                        {{ c.last_order_date.strftime('%d %b %Y') }}
+                                                    {% else %}
+                                                        <span class="text-muted">—</span>
+                                                    {% endif %}
+                                                </td>
+
+                                                <!-- Actions -->
+                                                <td>
+                                                    <div class="dropdown">
+                                                        <button class="btn-action" type="button" 
+                                                                data-bs-toggle="dropdown">
+                                                            <i class="ri-more-2-fill"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                          
+                                                            <li>
+                                                                <button class="dropdown-item edit-btn"
+                                                                        data-id="{{ c.id }}"
+                                                                        data-name="{{ c.name }}"
+                                                                        data-email="{{ c.email }}"
+                                                                        data-phone="{{ c.phone }}"
+                                                                        data-address="{{ c.address or '' }}"
+                                                                        data-city="{{ c.city or '' }}"
+                                                                        data-state="{{ c.state or '' }}"
+                                                                        data-join_date="{{ c.join_date.strftime('%Y-%m-%d') if c.join_date else '' }}"
+                                                                        data-status="{{ c.status }}"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#editCustomerModal">
+                                                                    <i class="ri-pencil-line text-warning"></i>
+                                                                    Edit
+                                                                </button>
+                                                            </li>
+                                                            <li>
+                                                                <button class="dropdown-item text-danger delete-btn"
+                                                                        data-id="{{ c.id }}"
+                                                                        data-name="{{ c.name }}"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#deleteCustomerModal">
+                                                                    <i class="ri-delete-bin-line"></i>
+                                                                    Delete
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <i class="ri-group-line"></i>
+                                <h5>No Customers Found</h5>
+                                <p class="text-muted">Click "Add Customer" to add your first customer</p>
+                                <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                    <i class="ri-add-line"></i>
+                                    Add Customer
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ADD CUSTOMER MODAL ==================== -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-user-add-line me-2"></i>Add New Customer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('customers.add_customer') }}" id="addCustomerForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Join Date</label>
+                            <input type="date" class="form-control" name="join_date">
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" name="address" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State</label>
+                            <input type="text" class="form-control" name="state">
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="Active">Active</option>
+                                <option value="Block">Block</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addCustomerForm" class="btn btn-save">
+                    <i class="ri-save-3-line me-1"></i>Save Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== IMPORT CSV MODAL ==================== -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-upload-2-line me-2"></i>Import Customers from CSV
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="import-modal-body">
+                <div class="import-icon">
+                    <i class="ri-file-excel-2-line"></i>
+                </div>
+                <h5>Upload CSV File</h5>
+                <p class="text-muted mb-4">Select a CSV file with customer data to import</p>
+                
+                <div class="csv-format">
+                    <p class="fw-bold mb-2">CSV Format (all fields optional except name & email):</p>
+                    <pre>name,email,phone,address,city,state,join_date,status
+John Doe,john@example.com,1234567890,123 Main St,Mumbai,Maharashtra,2024-01-15,Active
+Jane Smith,jane@example.com,9876543210,456 Park Ave,Delhi,Delhi,2024-02-20,Active</pre>
+                </div>
+                
+                <form method="POST" action="{{ url_for('customers.bulk_import') }}" enctype="multipart/form-data" id="importForm">
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="csv_file" accept=".csv" required>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="importForm" class="btn btn-save">
+                    <i class="ri-upload-2-line me-1"></i>Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== EDIT CUSTOMER MODAL ==================== -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-edit-box-line me-2"></i>Edit Customer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form method="POST" action="" id="editCustomerForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" id="edit_name" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" name="email" id="edit_email" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" name="phone" id="edit_phone">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Join Date</label>
+                            <input type="date" class="form-control" name="join_date" id="edit_join_date">
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" name="address" id="edit_address" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" id="edit_city">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">State</label>
+                            <input type="text" class="form-control" name="state" id="edit_state">
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" id="edit_status">
+                                <option value="Active">Active</option>
+                                <option value="Block">Block</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="editCustomerForm" class="btn btn-save">
+                    <i class="ri-save-3-line me-1"></i>Update Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== DELETE CUSTOMER MODAL ==================== -->
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                          colors="primary:#f7b84b,secondary:#f06548" style="width:80px;height:80px"></lord-icon>
+                <h5 class="mt-3">Are you sure?</h5>
+                <p class="text-muted">Customer <strong id="deleteCustomerName"></strong> will be permanently deleted. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="deleteCustomerForm">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- List.js for filtering -->
+<script src="{{url_for('static' ,filename='libs/list.js/list.min.js')}}"></script>
+<!-- Lordicon -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ===== SEARCH FUNCTIONALITY =====
+    const searchInput = document.getElementById('searchCustomer');
+    
+    if (searchInput) {
+        var options = {
+            valueNames: [
+                'customer_name',
+                'status',
+                'date'
+            ]
+        };
+        
+        var customerList = new List('customerTable', options);
+        
+        searchInput.addEventListener('keyup', function() {
+            customerList.search(this.value);
+        });
+    }
+    
+    // ===== SELECT ALL CHECKBOXES =====
+    const selectAll = document.getElementById('selectAll');
+    const customerCheckboxes = document.querySelectorAll('.customer-checkbox');
+    
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            customerCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    // ===== EDIT FUNCTIONALITY =====
+    const editButtons = document.querySelectorAll('.edit-btn');
+    const editForm = document.getElementById('editCustomerForm');
+    
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const customerId = this.getAttribute('data-id');
+            editForm.action = "{{ url_for('customers.update_customer', id=0) }}".replace('0', customerId);
+            
+            document.getElementById('edit_name').value = this.getAttribute('data-name') || '';
+            document.getElementById('edit_email').value = this.getAttribute('data-email') || '';
+            document.getElementById('edit_phone').value = this.getAttribute('data-phone') || '';
+            document.getElementById('edit_address').value = this.getAttribute('data-address') || '';
+            document.getElementById('edit_city').value = this.getAttribute('data-city') || '';
+            document.getElementById('edit_state').value = this.getAttribute('data-state') || '';
+            document.getElementById('edit_join_date').value = this.getAttribute('data-join_date') || '';
+            document.getElementById('edit_status').value = this.getAttribute('data-status') || 'Active';
+        });
+    });
+    
+    // ===== DELETE FUNCTIONALITY =====
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteForm = document.getElementById('deleteCustomerForm');
+    const deleteCustomerName = document.getElementById('deleteCustomerName');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const customerId = this.getAttribute('data-id');
+            const customerName = this.getAttribute('data-name');
+            deleteForm.action = "{{ url_for('customers.delete_customer', id=0) }}".replace('0', customerId);
+            if (deleteCustomerName) {
+                deleteCustomerName.textContent = customerName;
+            }
+        });
+    });
+    
+    // ===== RESET ADD FORM ON MODAL CLOSE =====
+    const addModal = document.getElementById('addCustomerModal');
+    if (addModal) {
+        addModal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('addCustomerForm').reset();
+        });
+    }
+    
+    // ===== RESET IMPORT FORM ON MODAL CLOSE =====
+    const importModal = document.getElementById('importModal');
+    if (importModal) {
+        importModal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('importForm').reset();
+        });
+    }
+    
+    // ===== AUTO-SUBMIT FILTERS =====
+    const filterInputs = document.querySelectorAll('#filterForm select, #filterForm input[type="date"]');
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+});
+</script>
+
+{% block footer %}
+    {% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}

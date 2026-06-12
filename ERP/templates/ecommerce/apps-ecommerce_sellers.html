@@ -1,0 +1,1247 @@
+{% extends "partials/base.html" %}
+{% block title %}Sellers{% endblock title %}
+
+{% block extra_css %}
+<!-- Simple DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    /* Main Card - Clean and Simple */
+    .main-card {
+        border: none;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .main-card:hover {
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.08);
+    }
+    
+    /* Card Header */
+    .card-header-custom {
+        background: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .card-header-custom h5 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 1.2rem;
+        letter-spacing: -0.3px;
+    }
+    
+    .card-header-custom h5 i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+    
+    /* Low Stock Alert Banner */
+    {% if low_stock_count and low_stock_count > 0 %}
+    .low-stock-alert {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+    }
+    
+    .low-stock-alert:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.95; }
+        100% { opacity: 1; }
+    }
+    
+    .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .alert-content i {
+        font-size: 1.5rem;
+    }
+    
+    .alert-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-weight: 600;
+    }
+    {% endif %}
+    
+    /* Stats Row */
+    .stats-row {
+        display: flex;
+        gap: 1.5rem;
+        padding: 0 2rem 1.5rem 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-card {
+        flex: 1;
+        min-width: 200px;
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        border: 1px solid #eef2f6;
+    }
+    
+    .stat-card:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #667eea;
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stat-content h6 {
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
+    }
+    
+    .stat-content h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    
+    /* Search Box */
+    .search-wrapper {
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-box {
+        position: relative;
+        width: 100%;
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem 0.8rem 45px;
+        border-radius: 50px;
+        border: 2px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .search-box input:focus + i {
+        color: #667eea;
+    }
+    
+    /* Action Buttons */
+    .action-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 2rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        letter-spacing: 0.3px;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-add i {
+        font-size: 1.1rem;
+    }
+    
+    .btn-import {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-import:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+    
+    /* Sellers Grid */
+    .sellers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+        padding: 0 2rem 2rem 2rem;
+    }
+    
+    /* Seller Card */
+    .seller-card {
+        transition: all 0.3s ease;
+        border: 1px solid #edf2f7;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+        background: white;
+        position: relative;
+    }
+    
+    .seller-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(102, 126, 234, 0.1);
+        border-color: #667eea40;
+    }
+    
+    .seller-card .card-body {
+        padding: 1.8rem 1.5rem !important;
+    }
+    
+    /* Seller Code Badge */
+    .seller-code {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #667eea;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Logo Circle */
+    .logo-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        margin: 0 auto 1rem;
+    }
+    
+    .logo-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        font-weight: 600;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Company Name */
+    .company-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Owner Name */
+    .owner-name {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        text-align: center;
+    }
+    
+    /* Location */
+    .location {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .location i {
+        color: #667eea;
+    }
+    
+    /* Statistics Row */
+    .stats-row-card {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 1.2rem;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 40px;
+    }
+    
+    .stat-item-card {
+        text-align: center;
+    }
+    
+    .stat-value-card {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.2;
+    }
+    
+    .stat-label-card {
+        font-size: 0.7rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    /* GST Badge */
+    .gst-badge {
+        background: #e6f7e6;
+        color: #0a7e0a;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .gst-badge i {
+        font-size: 0.9rem;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-action {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        text-decoration: none;
+    }
+    
+    .btn-view {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+    
+    .btn-view:hover {
+        background: #bae6fd;
+        color: #075985;
+    }
+    
+    .btn-edit {
+        background: #fef3c7;
+        color: #b45309;
+    }
+    
+    .btn-edit:hover {
+        background: #fde68a;
+        color: #92400e;
+    }
+    
+    .btn-delete {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    .btn-delete:hover {
+        background: #fecaca;
+        color: #991b1b;
+    }
+    
+    /* No Results Message */
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        color: #94a3b8;
+        grid-column: 1 / -1;
+    }
+    
+    .no-results i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #cbd5e0;
+    }
+    
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 24px 24px 0 0;
+        padding: 1.5rem 2rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+    
+    .modal-body {
+        padding: 2rem;
+    }
+    
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem 2rem;
+    }
+    
+    .nav-tabs-custom {
+        background: #f8fafc;
+        border-radius: 50px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .nav-tabs-custom .nav-link {
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        color: #64748b;
+        font-weight: 500;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    
+    .nav-tabs-custom .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #475569;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.7rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-light {
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+    }
+    
+    .btn-light:hover {
+        background: #f8fafc;
+        border-color: #cbd5e0;
+    }
+    
+    .btn-danger {
+        border-radius: 14px;
+        padding: 0.7rem 2rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-header-custom {
+            padding: 1.5rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-wrapper {
+            max-width: 100%;
+        }
+        
+        .action-bar {
+            flex-direction: column;
+        }
+        
+        .stats-row {
+            flex-direction: column;
+        }
+        
+        .sellers-grid {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Sellers</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ url_for('dashboards.index') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Sellers</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end page title -->
+
+            <!-- Low Stock Alert Banner -->
+            {% if low_stock_count and low_stock_count > 0 %}
+            <div class="low-stock-alert" onclick="window.location.href='{{ url_for('purchases.purchase_list') }}'">
+                <div class="alert-content">
+                    <i class="ri-alert-line"></i>
+                    <span>
+                        <strong>Low Stock Alert!</strong>
+                        {{ low_stock_count }} product(s) have stock ≤5 units
+                    </span>
+                    <span class="alert-badge">{{ low_stock_count }}</span>
+                </div>
+                <div class="alert-hover-text">
+                    <i class="ri-arrow-right-line"></i> Click to manage stock
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Main Card -->
+            <div class="main-card card">
+                <!-- Card Header with Search and Action Buttons -->
+                <div class="card-header-custom">
+                    <h5>
+                        <i class="ri-store-2-line"></i>
+                        Seller Management
+                    </h5>
+                    
+                    <div class="search-wrapper">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" class="form-control" id="searchSeller" 
+                                   placeholder="Search by name, company, location...">
+                        </div>
+                    </div>
+                    
+                    <div class="action-bar">
+                        <button class="btn-import" data-bs-toggle="modal" data-bs-target="#importSellerModal">
+                            <i class="ri-upload-2-line"></i>
+                            Import CSV
+                        </button>
+                        <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addSeller">
+                            <i class="ri-add-line"></i>
+                            Add Seller
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="ri-store-2-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Total Sellers</h6>
+                            <h3>{{ sellers|length }}</h3>
+                        </div>
+                    </div>
+                    
+                    {% set total_purchases = sellers|sum(attribute='total_purchases_count') %}
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="ri-shopping-cart-2-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Total Purchases</h6>
+                            <h3>{{ total_purchases }}</h3>
+                        </div>
+                    </div>
+                    
+                    {% set total_products = sellers|sum(attribute='products_supplied') %}
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="ri-capsule-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Products Supplied</h6>
+                            <h3>{{ total_products }}</h3>
+                        </div>
+                    </div>
+                    
+                    {% set total_spent = sellers|sum(attribute='total_spent') %}
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="ri-money-rupee-circle-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Total Spent</h6>
+                            <h3>₹{{ "{:,.0f}".format(total_spent) }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sellers Grid -->
+                <div class="sellers-grid" id="sellersGrid">
+                    {% for seller in sellers %}
+                    <div class="seller-card" 
+                         data-search="{{ seller.company_name|lower }} {{ seller.first_name|lower }} {{ seller.last_name|lower }} {{ seller.city|lower }} {{ seller.country|lower }} {{ seller.gst_number|lower }}">
+                        
+                        <!-- Seller Code Badge -->
+                        {% if seller.seller_code %}
+                        <div class="seller-code">{{ seller.seller_code }}</div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <!-- Logo -->
+                            <div class="text-center">
+                                {% if seller.company_logo %}
+                                    <img src="{{ url_for('static', filename='uploads/' + seller.company_logo) }}" 
+                                         class="logo-circle">
+                                {% else %}
+                                    <div class="logo-placeholder">
+                                        {{ seller.first_name[0] }}{{ seller.last_name[0] }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Company & Owner -->
+                            <h5 class="company-name">{{ seller.company_name or 'Individual Seller' }}</h5>
+                            <p class="owner-name">{{ seller.get_full_name() }}</p>
+
+                            <!-- Location -->
+                            {% if seller.city or seller.country %}
+                            <div class="location">
+                                <i class="ri-map-pin-line"></i>
+                                <span>{{ seller.city or '' }}{% if seller.city and seller.country %}, {% endif %}{{ seller.country or '' }}</span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Statistics -->
+                            <div class="stats-row-card">
+                                <div class="stat-item-card">
+                                    <div class="stat-value-card">{{ seller.total_purchases_count|default(0) }}</div>
+                                    <div class="stat-label-card">Purchases</div>
+                                </div>
+                                <div class="stat-item-card">
+                                    <div class="stat-value-card">{{ seller.products_supplied|default(0) }}</div>
+                                    <div class="stat-label-card">Products</div>
+                                </div>
+                                <div class="stat-item-card">
+                                    <div class="stat-value-card">₹{{ "{:,.0f}".format(seller.total_spent|default(0)) }}</div>
+                                    <div class="stat-label-card">Spent</div>
+                                </div>
+                            </div>
+
+                            <!-- GST Badge -->
+                            {% if seller.gst_number %}
+                            <div class="text-center">
+                                <span class="gst-badge">
+                                    <i class="ri-file-list-3-line"></i>
+                                    GST: {{ seller.gst_number }}
+                                </span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Action Buttons -->
+                            <div class="action-buttons">
+                                <a href="{{ url_for('sellers.seller_details', id=seller.id) }}"
+                                   class="btn-action btn-view">
+                                    <i class="ri-eye-line"></i>
+                                    View
+                                </a>
+
+                                <button type="button"
+                                        class="btn-action btn-edit edit-btn"
+                                        data-id="{{ seller.id }}"
+                                        data-first_name="{{ seller.first_name }}"
+                                        data-last_name="{{ seller.last_name }}"
+                                        data-contact_number="{{ seller.contact_number }}"
+                                        data-email="{{ seller.email }}"
+                                        data-city="{{ seller.city }}"
+                                        data-country="{{ seller.country }}"
+                                        data-company_name="{{ seller.company_name }}"
+                                        data-company_email="{{ seller.company_email }}"
+                                        data-work_number="{{ seller.work_number }}"
+                                        data-company_logo="{{ seller.company_logo }}"
+                                        data-gst_number="{{ seller.gst_number }}"
+                                        data-bank_name="{{ seller.bank_name }}"
+                                        data-account_holder_name="{{ seller.account_holder_name }}"
+                                        data-account_number="{{ seller.account_number }}"
+                                        data-ifsc="{{ seller.ifsc }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editSellerModal">
+                                    <i class="ri-pencil-line"></i>
+                                    Edit
+                                </button>
+
+                                <button type="button"
+                                        class="btn-action btn-delete delete-btn"
+                                        data-id="{{ seller.id }}"
+                                        data-name="{{ seller.get_full_name() }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteSellerModal">
+                                    <i class="ri-delete-bin-line"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- No Results Message -->
+                <div id="noResultsMessage" class="no-results" style="display: none;">
+                    <i class="ri-user-search-line"></i>
+                    <h5>No sellers found</h5>
+                    <p class="text-muted">Try adjusting your search criteria</p>
+                </div>
+            </div>
+
+            <!-- ==================== ADD SELLER MODAL ==================== -->
+            <div class="modal fade" id="addSeller" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="ri-user-add-line me-2"></i>Add New Seller
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <!-- Tabs Navigation -->
+                            <ul class="nav nav-tabs-custom nav-justified" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#addPersonalDetails">
+                                        <i class="ri-user-line me-1"></i><h4>Personal</h4>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#addBusinessDetails">
+                                        <i class="ri-store-2-line me-1"></i><h4>Business</h4>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#addBankDetails">
+                                        <i class="ri-bank-line me-1"></i><h4>Bank</h4>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <form method="POST" action="{{ url_for('sellers.add_seller') }}" enctype="multipart/form-data" id="addSellerForm">
+                                <div class="tab-content">
+                                    <!-- ===== PERSONAL TAB ===== -->
+                                    <div class="tab-pane fade show active" id="addPersonalDetails">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="first_name" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="last_name" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Contact Number</label>
+                                                <input type="text" class="form-control" name="contact_number">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" name="email">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">City</label>
+                                                <input type="text" class="form-control" name="city">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Country</label>
+                                                <input type="text" class="form-control" name="country">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== BUSINESS TAB ===== -->
+                                    <div class="tab-pane fade" id="addBusinessDetails">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Company Name</label>
+                                                <input type="text" class="form-control" name="company_name">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Company Email</label>
+                                                <input type="email" class="form-control" name="company_email">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Work Number</label>
+                                                <input type="text" class="form-control" name="work_number">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">GST Number</label>
+                                                <input type="text" class="form-control" name="gst_number">
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Company Logo</label>
+                                                <input type="file" class="form-control" name="company_logo" accept="image/*">
+                                                <small class="text-muted">Upload company logo (optional)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== BANK TAB ===== -->
+                                    <div class="tab-pane fade" id="addBankDetails">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Bank Name</label>
+                                                <input type="text" class="form-control" name="bank_name">
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Account Holder Name</label>
+                                                <input type="text" class="form-control" name="account_holder_name">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Account Number</label>
+                                                <input type="text" class="form-control" name="account_number">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">IFSC Code</label>
+                                                <input type="text" class="form-control" name="ifsc">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-save">
+                                        <i class="ri-save-3-line me-1"></i>Save Seller
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== EDIT SELLER MODAL ==================== -->
+            <div class="modal fade" id="editSellerModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="ri-edit-box-line me-2"></i>Edit Seller
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <ul class="nav nav-tabs-custom nav-justified" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#editPersonalDetails">
+                                        <i class="ri-user-line me-1"></i>Personal
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#editBusinessDetails">
+                                        <i class="ri-store-2-line me-1"></i>Business
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#editBankDetails">
+                                        <i class="ri-bank-line me-1"></i>Bank
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <form method="POST" action="" id="editSellerForm" enctype="multipart/form-data">
+                                <div class="tab-content">
+                                    <!-- ===== PERSONAL TAB ===== -->
+                                    <div class="tab-pane fade show active" id="editPersonalDetails">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">First Name</label>
+                                                <input type="text" class="form-control" name="first_name" id="edit_firstnameInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" name="last_name" id="edit_lastnameInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Contact Number</label>
+                                                <input type="text" class="form-control" name="contact_number" id="edit_contactnumberInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" name="email" id="edit_emailidInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">City</label>
+                                                <input type="text" class="form-control" name="city" id="edit_cityidInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Country</label>
+                                                <input type="text" class="form-control" name="country" id="edit_countryidInput">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== BUSINESS TAB ===== -->
+                                    <div class="tab-pane fade" id="editBusinessDetails">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Company Name</label>
+                                                <input type="text" class="form-control" name="company_name" id="edit_companynameInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Company Email</label>
+                                                <input type="email" class="form-control" name="company_email" id="edit_companyemailInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Work Number</label>
+                                                <input type="text" class="form-control" name="work_number" id="edit_worknumberInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">GST Number</label>
+                                                <input type="text" class="form-control" name="gst_number" id="edit_gstnumberInput">
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Company Logo</label>
+                                                <input type="file" class="form-control" name="company_logo" id="edit_companylogoInput" accept="image/*">
+                                                <small class="text-muted">Leave empty to keep current logo</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== BANK TAB ===== -->
+                                    <div class="tab-pane fade" id="editBankDetails">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Bank Name</label>
+                                                <input type="text" class="form-control" name="bank_name" id="edit_banknameInput">
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Account Holder Name</label>
+                                                <input type="text" class="form-control" name="account_holder_name" id="edit_accountnameInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Account Number</label>
+                                                <input type="text" class="form-control" name="account_number" id="edit_accountnumberInput">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">IFSC Code</label>
+                                                <input type="text" class="form-control" name="ifsc" id="edit_ifscInput">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-save">
+                                        <i class="ri-save-3-line me-1"></i>Update Seller
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== IMPORT SELLER MODAL ==================== -->
+            <div class="modal fade" id="importSellerModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="ri-upload-2-line me-2"></i>Import Sellers from CSV
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <i class="ri-file-excel-2-line" style="font-size: 3rem; color: #10b981;"></i>
+                                <p class="mt-2">Upload a CSV file with seller data</p>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="ri-information-line"></i>
+                                <strong>CSV Format:</strong><br>
+                                first_name, last_name, email, contact_number, city, country,<br>
+                                company_name, company_email, work_number, gst_number,<br>
+                                bank_name, account_holder_name, account_number, ifsc
+                            </div>
+                            
+                            <form method="POST" action="{{ url_for('sellers.bulk_import') }}" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label class="form-label">Select CSV File</label>
+                                    <input type="file" class="form-control" name="csv_file" accept=".csv" required>
+                                </div>
+                                
+                                <div class="modal-footer px-0 pb-0">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-save">
+                                        <i class="ri-upload-2-line"></i> Upload & Import
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== DELETE SELLER MODAL ==================== -->
+            <div class="modal fade" id="deleteSellerModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" 
+                                      colors="primary:#f7b84b,secondary:#f06548" style="width:80px;height:80px"></lord-icon>
+                            <h5 class="mt-3">Are you sure?</h5>
+                            <p class="text-muted">Seller <strong id="deleteSellerName"></strong> will be permanently deleted. This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <form method="POST" id="deleteSellerForm">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<!-- Lordicon for animations -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ===== SEARCH FUNCTIONALITY =====
+    const searchInput = document.getElementById('searchSeller');
+    const sellerCards = document.querySelectorAll('.seller-card');
+    const noResultsMsg = document.getElementById('noResultsMessage');
+    
+    function filterSellers() {
+        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        let visibleCount = 0;
+        
+        sellerCards.forEach(card => {
+            const searchData = card.getAttribute('data-search') || '';
+            if (searchTerm === '' || searchData.includes(searchTerm)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide no results message
+        if (visibleCount === 0) {
+            noResultsMsg.style.display = 'block';
+        } else {
+            noResultsMsg.style.display = 'none';
+        }
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('keyup', filterSellers);
+    }
+
+    // ===== DELETE FUNCTIONALITY =====
+    const deleteButtons = document.querySelectorAll(".delete-btn");
+    const deleteForm = document.getElementById("deleteSellerForm");
+    const deleteSellerName = document.getElementById("deleteSellerName");
+
+    deleteButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            const sellerId = this.getAttribute("data-id");
+            const sellerName = this.getAttribute("data-name");
+            deleteForm.action = "{{ url_for('sellers.delete_seller', id=0) }}".replace('0', sellerId);
+            if (deleteSellerName) {
+                deleteSellerName.textContent = sellerName;
+            }
+        });
+    });
+
+    // ===== EDIT FUNCTIONALITY =====
+    const editButtons = document.querySelectorAll(".edit-btn");
+    const editForm = document.getElementById("editSellerForm");
+
+    editButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            const sellerId = this.getAttribute("data-id");
+            editForm.action = "{{ url_for('sellers.update_seller', id=0) }}".replace('0', sellerId);
+            
+            // Personal Details
+            document.getElementById("edit_firstnameInput").value = this.getAttribute("data-first_name") || '';
+            document.getElementById("edit_lastnameInput").value = this.getAttribute("data-last_name") || '';
+            document.getElementById("edit_contactnumberInput").value = this.getAttribute("data-contact_number") || '';
+            document.getElementById("edit_emailidInput").value = this.getAttribute("data-email") || '';
+            document.getElementById("edit_cityidInput").value = this.getAttribute("data-city") || '';
+            document.getElementById("edit_countryidInput").value = this.getAttribute("data-country") || '';
+            
+            // Business Details
+            document.getElementById("edit_companynameInput").value = this.getAttribute("data-company_name") || '';
+            document.getElementById("edit_companyemailInput").value = this.getAttribute("data-company_email") || '';
+            document.getElementById("edit_worknumberInput").value = this.getAttribute("data-work_number") || '';
+            document.getElementById("edit_gstnumberInput").value = this.getAttribute("data-gst_number") || '';
+            
+            // Bank Details
+            document.getElementById("edit_banknameInput").value = this.getAttribute("data-bank_name") || '';
+            document.getElementById("edit_accountnameInput").value = this.getAttribute("data-account_holder_name") || '';
+            document.getElementById("edit_accountnumberInput").value = this.getAttribute("data-account_number") || '';
+            document.getElementById("edit_ifscInput").value = this.getAttribute("data-ifsc") || '';
+        });
+    });
+    
+    // Reset add form when modal is closed
+    const addModal = document.getElementById('addSeller');
+    if (addModal) {
+        addModal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('addSellerForm').reset();
+        });
+    }
+    
+    // Reset import modal form
+    const importModal = document.getElementById('importSellerModal');
+    if (importModal) {
+        importModal.addEventListener('hidden.bs.modal', function() {
+            const form = this.querySelector('form');
+            if (form) form.reset();
+        });
+    }
+});
+</script>
+
+{% block footer %}
+{% include "partials/footer.html" %}
+{% endblock footer %}
+
+{% endblock extra_js %}
