@@ -11,7 +11,8 @@ def create_app():
 
 
     app.config['SQLALCHEMY_DATABASE_URI'] = (
-        "mysql+pymysql://root:dhruvi%402004@localhost:3306/erp"
+        "mysql+pymysql://root:user:pass@localhost:3306/erp"
+ 
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
